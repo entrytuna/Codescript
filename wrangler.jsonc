@@ -21,7 +21,12 @@
     {
       "tag": "v1",
       "new_sqlite_classes": [
-        "CodescriptRoom",
+        "CodescriptRoom"
+      ]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": [
         "CodescriptServer"
       ]
     }
