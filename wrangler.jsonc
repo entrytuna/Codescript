@@ -3,19 +3,21 @@
   "name": "codescript",
   "main": "worker.js",
   "compatibility_date": "2026-08-20",
+
   "durable_objects": {
     "bindings": [
       {
-        "name": "CODESCRIPT_ROOM",
-        "class_name": "CodescriptRoom"
+        "name": "CODESCRIPT_SERVER",
+        "class_name": "CodescriptServer"
       }
     ]
   },
+
   "migrations": [
     {
       "tag": "v1",
       "new_sqlite_classes": [
-        "CodescriptRoom"
+        "CodescriptServer"
       ]
     }
   ]
