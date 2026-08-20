@@ -15,5 +15,20 @@
         "class_name": "CodescriptServer"
       }
     ]
-  }
+  },
+
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "CodescriptRoom"
+      ]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": [
+        "CodescriptServer"
+      ]
+    }
+  ]
 }
