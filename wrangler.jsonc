@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "codescript",
+  "main": "worker.js",
+  "compatibility_date": "2026-08-20",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "CODESCRIPT_ROOM",
+        "class_name": "CodescriptRoom"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "CodescriptRoom"
+      ]
+    }
+  ]
+}
