@@ -1,18 +1,33 @@
 import { DurableObject } from "cloudflare:workers";
 
 const MAX_CLIENTS_PER_ROOM = 20;
+
 const MAIN_JS_URL =
   "https://raw.githubusercontent.com/entrytuna/Codescript/main/main.js";
 
+/*
+ * 기존에 Cloudflare에 이미 생성된 Durable Object.
+ * 삭제하지 않고 그대로 유지해야 한다.
+ */
+export class CodescriptRoom extends DurableObject {
+  async fetch(request) {
+    return new Response("CodescriptRoom legacy endpoint");
+  }
+}
+
+/*
+ * 실제 Codescript 온라인 서버
+ */
 export class CodescriptServer extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
+
     this.sessions = new Map();
     this.rooms = new Map();
   }
 
   async fetch(request) {
-    if (request.headers.get("Upgrade") !== "websocket") {
+    if (request.headers.get("Upgrade")?.toLowerCase() !== "websocket") {
       return new Response("WebSocket endpoint");
     }
 
@@ -33,8 +48,9 @@ export class CodescriptServer extends DurableObject {
     socket.addEventListener("message", async event => {
       try {
         const message = JSON.parse(event.data);
+
         await this.handleMessage(session, message);
-      } catch {
+      } catch (error) {
         this.send(socket, {
           type: "error",
           message: "잘못된 요청입니다."
@@ -42,15 +58,13 @@ export class CodescriptServer extends DurableObject {
       }
     });
 
-    socket.addEventListener("close", () => {
+    const disconnect = () => {
       this.leaveRoom(session);
       this.sessions.delete(socket);
-    });
+    };
 
-    socket.addEventListener("error", () => {
-      this.leaveRoom(session);
-      this.sessions.delete(socket);
-    });
+    socket.addEventListener("close", disconnect);
+    socket.addEventListener("error", disconnect);
 
     this.send(socket, {
       type: "connected",
@@ -66,24 +80,36 @@ export class CodescriptServer extends DurableObject {
   async handleMessage(session, message) {
     switch (message.type) {
       case "create_room":
-        return this.createRoom(session);
+        this.createRoom(session);
+        break;
 
       case "join_room":
-        return this.joinRoom(session, String(message.room || ""));
+        this.joinRoom(
+          session,
+          String(message.room || "")
+        );
+        break;
 
       case "project_change":
-        return this.projectChange(session, message);
+        this.projectChange(session, message);
+        break;
 
       case "save_project":
-        return this.saveProject(session, message.project);
+        await this.saveProject(
+          session,
+          message.project
+        );
+        break;
 
       case "list_projects":
-        return this.listProjects(session);
+        await this.listProjects(session);
+        break;
 
       default:
         this.send(session.socket, {
           type: "error",
-          message: `알 수 없는 요청: ${message.type}`
+          message:
+            `알 수 없는 요청: ${message.type}`
         });
     }
   }
@@ -94,10 +120,18 @@ export class CodescriptServer extends DurableObject {
     let code;
 
     do {
-      code = String(Math.floor(100000 + Math.random() * 900000));
+      code = String(
+        Math.floor(
+          100000 + Math.random() * 900000
+        )
+      );
     } while (this.rooms.has(code));
 
-    this.rooms.set(code, new Set([session]));
+    this.rooms.set(
+      code,
+      new Set([session])
+    );
+
     session.room = code;
 
     this.send(session.socket, {
@@ -112,8 +146,10 @@ export class CodescriptServer extends DurableObject {
     if (!/^\d{6}$/.test(code)) {
       this.send(session.socket, {
         type: "error",
-        message: "방 코드는 6자리 숫자입니다."
+        message:
+          "방 코드는 6자리 숫자입니다."
       });
+
       return;
     }
 
@@ -121,27 +157,38 @@ export class CodescriptServer extends DurableObject {
 
     if (!room) {
       room = new Set();
-      this.rooms.set(code, room);
+
+      this.rooms.set(
+        code,
+        room
+      );
     }
 
-    if (room.size >= MAX_CLIENTS_PER_ROOM) {
+    if (
+      room.size >=
+      MAX_CLIENTS_PER_ROOM
+    ) {
       this.send(session.socket, {
         type: "error",
-        message: "방이 가득 찼습니다. 최대 20명까지 접속할 수 있습니다."
+        message:
+          "방이 가득 찼습니다. 최대 20명까지 접속할 수 있습니다."
       });
+
       return;
     }
 
     this.leaveRoom(session);
 
     room.add(session);
+
     session.room = code;
 
     this.send(session.socket, {
       type: "room_joined",
       room: code,
       clients: room.size,
-      maxClients: MAX_CLIENTS_PER_ROOM
+      maxClients:
+        MAX_CLIENTS_PER_ROOM
     });
 
     this.broadcastRoom(code, {
@@ -151,20 +198,28 @@ export class CodescriptServer extends DurableObject {
   }
 
   leaveRoom(session) {
-    if (!session.room) return;
+    if (!session.room) {
+      return;
+    }
 
-    const room = this.rooms.get(session.room);
+    const room =
+      this.rooms.get(session.room);
 
     if (room) {
       room.delete(session);
 
       if (room.size === 0) {
-        this.rooms.delete(session.room);
+        this.rooms.delete(
+          session.room
+        );
       } else {
-        this.broadcastRoom(session.room, {
-          type: "presence",
-          clients: room.size
-        });
+        this.broadcastRoom(
+          session.room,
+          {
+            type: "presence",
+            clients: room.size
+          }
+        );
       }
     }
 
@@ -172,13 +227,16 @@ export class CodescriptServer extends DurableObject {
   }
 
   projectChange(session, message) {
-    if (!session.room) return;
+    if (!session.room) {
+      return;
+    }
 
     this.broadcastRoom(
       session.room,
       {
         type: "room_update",
-        payload: message.payload || {}
+        payload:
+          message.payload || {}
       },
       session
     );
@@ -188,25 +246,55 @@ export class CodescriptServer extends DurableObject {
     if (!project || !project.name) {
       this.send(session.socket, {
         type: "error",
-        message: "프로젝트 정보가 없습니다."
+        message:
+          "프로젝트 정보가 없습니다."
       });
+
       return;
     }
 
     if (project.public === true) {
-      const id = crypto.randomUUID();
+      const id =
+        crypto.randomUUID();
 
-      await this.ctx.storage.put(`project:${id}`, {
-        id,
-        name: String(project.name).slice(0, 100),
-        mode: project.mode || "offline",
-        code: Array.isArray(project.code) ? project.code : [],
-        vars: Array.isArray(project.vars) ? project.vars : [],
-        lists: Array.isArray(project.lists) ? project.lists : [],
-        funcs: Array.isArray(project.funcs) ? project.funcs : [],
-        likes: 0,
-        createdAt: Date.now()
-      });
+      await this.ctx.storage.put(
+        `project:${id}`,
+        {
+          id,
+
+          name:
+            String(project.name)
+              .slice(0, 100),
+
+          mode:
+            project.mode ||
+            "offline",
+
+          code:
+            Array.isArray(project.code)
+              ? project.code
+              : [],
+
+          vars:
+            Array.isArray(project.vars)
+              ? project.vars
+              : [],
+
+          lists:
+            Array.isArray(project.lists)
+              ? project.lists
+              : [],
+
+          funcs:
+            Array.isArray(project.funcs)
+              ? project.funcs
+              : [],
+
+          likes: 0,
+
+          createdAt: Date.now()
+        }
+      );
     }
 
     this.send(session.socket, {
@@ -216,13 +304,16 @@ export class CodescriptServer extends DurableObject {
   }
 
   async listProjects(session) {
-    const result = await this.ctx.storage.list({
-      prefix: "project:"
-    });
+    const result =
+      await this.ctx.storage.list({
+        prefix: "project:"
+      });
 
     const projects = [];
 
-    for (const value of result.values()) {
+    for (
+      const value of result.values()
+    ) {
       projects.push({
         id: value.id,
         name: value.name,
@@ -232,33 +323,55 @@ export class CodescriptServer extends DurableObject {
       });
     }
 
-    projects.sort((a, b) => b.likes - a.likes);
+    projects.sort(
+      (a, b) =>
+        b.likes - a.likes
+    );
 
     this.send(session.socket, {
       type: "projects",
-      projects: projects.slice(0, 100)
+      projects:
+        projects.slice(0, 100)
     });
   }
 
-  broadcastRoom(roomCode, message, except = null) {
-    const room = this.rooms.get(roomCode);
+  broadcastRoom(
+    roomCode,
+    message,
+    except = null
+  ) {
+    const room =
+      this.rooms.get(roomCode);
 
-    if (!room) return;
+    if (!room) {
+      return;
+    }
 
-    for (const session of room) {
+    for (
+      const session of room
+    ) {
       if (
         session !== except &&
-        session.socket.readyState === WebSocket.OPEN
+        session.socket.readyState ===
+          WebSocket.OPEN
       ) {
-        this.send(session.socket, message);
+        this.send(
+          session.socket,
+          message
+        );
       }
     }
   }
 
   send(socket, message) {
-    if (socket.readyState === WebSocket.OPEN) {
+    if (
+      socket.readyState ===
+      WebSocket.OPEN
+    ) {
       try {
-        socket.send(JSON.stringify(message));
+        socket.send(
+          JSON.stringify(message)
+        );
       } catch {}
     }
   }
@@ -266,18 +379,23 @@ export class CodescriptServer extends DurableObject {
 
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url);
+    const url =
+      new URL(request.url);
 
     /*
-     * Codescript 화면
+     * Codescript 메인 화면
      */
-    if (url.pathname === "/" || url.pathname === "/index.html") {
+    if (
+      url.pathname === "/" ||
+      url.pathname === "/index.html"
+    ) {
       return new Response(
         `<!doctype html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport"
+content="width=device-width,initial-scale=1">
 <title>Codescript</title>
 </head>
 <body>
@@ -286,43 +404,52 @@ export default {
 </html>`,
         {
           headers: {
-            "content-type": "text/html; charset=UTF-8",
-            "cache-control": "no-cache"
+            "content-type":
+              "text/html; charset=UTF-8",
+
+            "cache-control":
+              "no-cache"
           }
         }
       );
     }
 
     /*
-     * GitHub의 main.js를 웹페이지에서 불러오기
+     * GitHub main.js 제공
      */
     if (url.pathname === "/main.js") {
-      const response = await fetch(MAIN_JS_URL, {
-        cf: {
-          cacheTtl: 60,
-          cacheEverything: true
-        }
-      });
+      const response =
+        await fetch(MAIN_JS_URL);
 
       if (!response.ok) {
         return new Response(
           "main.js를 불러오지 못했습니다.",
-          { status: 502 }
+          {
+            status: 502
+          }
         );
       }
 
-      return new Response(await response.text(), {
-        headers: {
-          "content-type": "application/javascript; charset=UTF-8",
-          "cache-control": "public, max-age=60"
+      return new Response(
+        await response.text(),
+        {
+          headers: {
+            "content-type":
+              "application/javascript; charset=UTF-8",
+
+            "cache-control":
+              "public, max-age=60"
+          }
         }
-      });
+      );
     }
 
     /*
-     * 상태 확인
+     * 서버 상태 확인
      */
-    if (url.pathname === "/health") {
+    if (
+      url.pathname === "/health"
+    ) {
       return Response.json({
         ok: true,
         service: "Codescript",
@@ -331,20 +458,33 @@ export default {
     }
 
     /*
-     * WebSocket
+     * Codescript WebSocket
      */
     if (
       url.pathname === "/ws" &&
-      request.headers.get("Upgrade")?.toLowerCase() === "websocket"
+      request.headers
+        .get("Upgrade")
+        ?.toLowerCase() ===
+        "websocket"
     ) {
-      const id = env.CODESCRIPT_SERVER.idFromName("global");
-      const server = env.CODESCRIPT_SERVER.get(id);
+      const id =
+        env.CODESCRIPT_SERVER
+          .idFromName("global");
 
-      return server.fetch(request);
+      const server =
+        env.CODESCRIPT_SERVER
+          .get(id);
+
+      return server.fetch(
+        request
+      );
     }
 
-    return new Response("Codescript 서버가 실행 중입니다.", {
-      status: 200
-    });
+    return new Response(
+      "Codescript 서버가 실행 중입니다.",
+      {
+        status: 200
+      }
+    );
   }
 };
