@@ -998,242 +998,6 @@ async function executeBlock(block){
    if(typeof a.dx==="number")
     state.actor.x+=a.dx;
 
-   if(typeof a.dy==="number")
-    state.actor.y+=a.dy;
-
-   if(typeof a.rotate==="number")
-    state.actor.direction+=a.rotate;
-
-   if(block.name.includes("x좌표")){
-    state.actor.x=
-     parseFloat(block.name.match(/-?\d+/)?.[0]||0);
-   }
-
-   if(block.name.includes("y좌표")){
-    state.actor.y=
-     parseFloat(block.name.match(/-?\d+/)?.[0]||0);
-   }
-
-   drawStage();
-   break;
-
-  /* ---------------- LOOKS ---------------- */
-
-  case "looks":
-
-   if(typeof a.size==="number")
-    state.actor.size=a.size;
-
-   if(typeof a.visible==="boolean")
-    state.actor.visible=a.visible;
-
-   if(block.name.includes("말하기")){
-    const text=prompt("말할 내용", "안녕하세요!");
-    if(text!==null){
-     state.lastText=text;
-     log(`💬 ${text}`);
-    }
-   }
-
-   drawStage();
-   break;
-
-  /* ---------------- BRUSH ---------------- */
-
-  case "brush":
-
-   if(a.op==="down")
-    state.pen.down=true;
-
-   if(a.op==="up")
-    state.pen.down=false;
-
-   if(a.op==="clear"){
-    clearStage();
-   }
-
-   if(a.op==="stamp"){
-    drawStamp();
-   }
-
-   break;
-
-  /* ---------------- TEXT ---------------- */
-
-  case "text":
-
-   if(a.op==="show"){
-    const text=prompt("글상자 내용", state.lastText||"");
-    if(text!==null){
-     state.lastText=text;
-     log(`📝 ${text}`);
-    }
-   }
-
-   if(a.op==="clear"){
-    state.lastText="";
-   }
-
-   break;
-
-  /* ---------------- SOUND ---------------- */
-
-  case "sound":
-
-   if(a.op==="beep")
-    beep();
-
-   if(a.op==="stop")
-    log("🔇 모든 소리 정지");
-
-   break;
-
-  /* ---------------- CALC ---------------- */
-
-  case "calc":{
-
-   const a1=
-    Number(prompt("첫 번째 값","10"));
-
-   const a2=
-    Number(prompt("두 번째 값","5"));
-
-   let result=0;
-
-   if(a.op==="add")
-    result=a1+a2;
-
-   if(a.op==="sub")
-    result=a1-a2;
-
-   if(a.op==="mul")
-    result=a1*a2;
-
-   if(a.op==="div")
-    result=a2===0 ? 0 : a1/a2;
-
-   if(a.op==="mod")
-    result=a2===0 ? 0 : a1%a2;
-
-   if(a.op==="min")
-    result=Math.min(a1,a2);
-
-   if(a.op==="max")
-    result=Math.max(a1,a2);
-
-   if(a.op==="random")
-    result=Math.floor(
-     Math.random()*(a2-a1+1)
-    )+a1;
-
-   if(a.op==="length")
-    result=String(a1).length;
-
-   state.lastValue=result;
-
-   log(`= 결과: ${result}`);
-
-   break;
-  }
-
-  /* ---------------- JUDGE ---------------- */
-
-  case "judge":{
-
-   let result=false;
-
-   if(a.op==="gt")
-    result=state.lastValue>a.value;
-
-   else if(a.op==="lt")
-    result=state.lastValue<a.value;
-
-   else if(a.op==="eq")
-    result=state.lastValue===a.value;
-
-   else if(block.name.includes(">")){
-    const x=Number(prompt("값","10"));
-    const y=Number(prompt("비교값","5"));
-    result=x>y;
-   }
-
-   else if(block.name.includes("=")){
-    const x=Number(prompt("값","10"));
-    const y=Number(prompt("비교값","10"));
-    result=x===y;
-   }
-
-   state.lastValue=result;
-   log(`판단 결과: ${result ? "참" : "거짓"}`);
-
-   break;
-  }
-
-  /* ---------------- DATA ---------------- */
-
-  case "data":{
-
-   if(a.op==="add"){
-
-    if(!state.vars.length)
-     state.vars.push("변수1");
-
-    const n=state.vars[0];
-
-    const old=Number(
-     localStorage.getItem("var:"+n)||0
-    );
-
-    localStorage.setItem(
-     "var:"+n,
-     String(old+(a.value||1))
-    );
-
-    state.lastValue=old+(a.value||1);
-   }
-
-   else if(a.op==="sub"){
-
-    if(!state.vars.length)
-     state.vars.push("변수1");
-
-    const n=state.vars[0];
-
-    const old=Number(
-     localStorage.getItem("var:"+n)||0
-    );
-
-    localStorage.setItem(
-     "var:"+n,
-     String(old-(a.value||1))
-    );
-
-    state.lastValue=old-(a.value||1);
-   }
-
-   else if(block.name.includes("변수 만들기")){
-    newVar();
-   }
-
-   else if(block.name.includes("변수 삭제")){
-    if(state.vars.length)
-     state.vars.pop();
-   }
-
-   else if(block.name.includes("변수 설정")){
-
-    if(!state.vars.length)
-     state.vars.push("변수1");
-
-    const n=state.vars[0];
-    const v=prompt("값","0");
-
-    localStorage.setItem("var:"+n,v??"0");
-    state.lastValue=v??"0";
-   }
-
-   else if(block.name.includes("변수 읽기")){
-
     const n=state.vars[0];
 
     state.lastValue=
@@ -1291,7 +1055,7 @@ async function executeBlock(block){
 
   /* ---------------- FUNCTION ---------------- */
 
-  case "func":
+  case "func"
 
    if(a.op==="call"){
     log("⚙ 함수 실행");
@@ -1472,6 +1236,7 @@ function drawStamp(){
  const c=canvas.getContext("2d");
 
  c.font="35px sans-serif";
+
  c.fillText(
   "🎮",
   state.actor.x,
@@ -1779,18 +1544,1703 @@ function renderProjects(ps){
 }
 
 /* ---------------------------------------------------------
-   그림판
+   고급 그림판
    --------------------------------------------------------- */
+
+function ensurePixelData(){
+
+ if(!state.paint.pixels ||
+    state.paint.pixels.length!==80 ||
+    state.paint.pixels[0]?.length!==128){
+
+  state.paint.pixels=
+   Array.from(
+    {length:80},
+    ()=>Array.from(
+     {length:128},
+     ()=>[255,255,255,0]
+    )
+   );
+ }
+}
+
+function rgba(hex,alpha){
+
+ const h=hex.replace("#","");
+
+ const n=parseInt(
+  h.length===3 ?
+   h.split("").map(x=>x+x).join("") :
+   h,
+  16
+ );
+
+ return [
+  n>>16,
+  (n>>8)&255,
+  n&255,
+  Math.round(alpha*2.55)
+ ];
+}
+
+function hexFromRgb(r,g,b){
+ return "#"+
+  [r,g,b]
+   .map(v=>
+    Math.max(
+     0,
+     Math.min(255,v)
+    ).toString(16).padStart(2,"0")
+   )
+   .join("");
+}
+
+function getPaintCanvas(){
+ return document.getElementById("paintCanvas");
+}
+
+function getPaintCtx(){
+
+ const c=getPaintCanvas();
+
+ return c ?
+  c.getContext("2d") :
+  null;
+}
+
+function paintHistory(){
+
+ if(document.getElementById("paintModal"))
+  state.history.push(snap());
+
+ state.future=[];
+}
+
+function openPaint(){
+
+ if(document.getElementById("paintModal"))
+  return;
+
+ document.body.insertAdjacentHTML(
+  "beforeend",
+  `
+  <div class="paint-modal" id="paintModal">
+
+   <div class="paint-window">
+
+    <div class="paint-head">
+
+     <h2>🎨 Codescript 그림판</h2>
+
+     <button onclick="CS.paintUndo()">↶</button>
+     <button onclick="CS.paintRedo()">↷</button>
+
+     <button onclick="CS.paintClear()">
+      🗑 캔버스 지우기
+     </button>
+
+     <div class="grow"></div>
+
+     <button onclick="CS.exportPaint()">
+      PNG 내보내기
+     </button>
+
+     <button onclick="CS.closePaint()">
+      ✕ 닫기
+     </button>
+
+    </div>
+
+    <div class="paint-body">
+
+     <div class="paint-tools">
+
+      <h3>모드</h3>
+
+      <div class="paint-mode">
+
+       <button data-pmode="bitmap">
+        Bitmap
+       </button>
+
+       <button data-pmode="vector">
+        Vector
+       </button>
+
+       <button data-pmode="pixelmap">
+        Pixelmap
+       </button>
+
+      </div>
+
+      <h3>도구</h3>
+
+      <div class="paint-tool-grid">
+
+       <button data-tool="pen">
+        ✏️ 연필
+       </button>
+
+       <button data-tool="eraser">
+        🧽 지우개
+       </button>
+
+       <button data-tool="line">
+        ／ 직선
+       </button>
+
+       <button data-tool="rect">
+        ▭ 사각형
+       </button>
+
+       <button data-tool="circle">
+        ○ 원
+       </button>
+
+       <button data-tool="fill">
+        🪣 채우기
+       </button>
+
+       <button data-tool="select">
+        ✋ 선택
+       </button>
+
+       <button data-tool="picker">
+        💧 스포이드
+       </button>
+
+      </div>
+
+      <h3>색상</h3>
+
+      <div class="paint-field">
+
+       <label>색상</label>
+
+       <input
+        id="paintColor"
+        class="paint-color"
+        type="color"
+       >
+
+      </div>
+
+      <div class="paint-field">
+
+       <label>투명도</label>
+
+       <input
+        id="paintAlpha"
+        type="range"
+        min="0"
+        max="100"
+       >
+
+      </div>
+
+      <div class="paint-field">
+
+       <label>굵기</label>
+
+       <input
+        id="paintWidth"
+        type="range"
+        min="1"
+        max="80"
+       >
+
+      </div>
+
+      <div class="paint-field">
+
+       <label>확대</label>
+
+       <input
+        id="paintZoom"
+        type="range"
+        min="50"
+        max="300"
+        step="10"
+       >
+
+      </div>
+
+      <p class="pixel-help">
+       Pixelmap은 128×80 픽셀 기반입니다.
+       Vector는 도형을 객체로 저장해 확대해도
+       깨지지 않습니다.
+      </p>
+
+     </div>
+
+     <div class="paint-canvas-wrap">
+
+      <canvas
+       id="paintCanvas"
+       width="800"
+       height="500"
+      ></canvas>
+
+     </div>
+
+     <div class="paint-side">
+
+      <h3>레이어</h3>
+
+      <div id="paintLayers"></div>
+
+      <button onclick="CS.addPaintLayer()">
+       ＋ 레이어
+      </button>
+
+      <button onclick="CS.renamePaintLayer()">
+       이름 변경
+      </button>
+
+      <button onclick="CS.removePaintLayer()">
+       삭제
+      </button>
+
+      <h3>선택 객체</h3>
+
+      <p
+       id="paintSelection"
+       class="small"
+      >
+       선택 없음
+      </p>
+
+      <h3>프로젝트</h3>
+
+      <button
+       onclick="CS.savePaintToProject()"
+      >
+       💾 프로젝트에 적용
+      </button>
+
+     </div>
+
+    </div>
+
+   </div>
+
+  </div>
+  `
+ );
+
+ bindPaintUI();
+ renderPaintEditor();
+}
+
+function closePaint(){
+
+ syncPaintFromCanvas();
+ syncPaintPreview();
+
+ document
+  .getElementById("paintModal")
+  ?.remove();
+}
+
+function bindPaintUI(){
+
+ document
+  .querySelectorAll("[data-pmode]")
+  .forEach(
+   b=>
+    b.onclick=()=>
+     setPaintMode(b.dataset.pmode)
+  );
+
+ document
+  .querySelectorAll("[data-tool]")
+  .forEach(
+   b=>
+    b.onclick=()=>
+     setPaintTool(b.dataset.tool)
+  );
+
+ const color=
+  document.getElementById("paintColor");
+
+ const alpha=
+  document.getElementById("paintAlpha");
+
+ const width=
+  document.getElementById("paintWidth");
+
+ const zoom=
+  document.getElementById("paintZoom");
+
+ if(color){
+  color.value=state.paint.color;
+
+  color.oninput=()=>{
+   state.paint.color=color.value;
+  };
+ }
+
+ if(alpha){
+  alpha.value=state.paint.alpha;
+
+  alpha.oninput=()=>{
+   state.paint.alpha=+alpha.value;
+  };
+ }
+
+ if(width){
+  width.value=state.paint.width;
+
+  width.oninput=()=>{
+   state.paint.width=+width.value;
+  };
+ }
+
+ if(zoom){
+  zoom.value=state.paint.zoom;
+
+  zoom.oninput=()=>{
+   state.paint.zoom=+zoom.value;
+   applyPaintZoom();
+  };
+ }
+
+ const c=getPaintCanvas();
+
+ if(c){
+
+  c.onpointerdown=paintPointerDown;
+
+  c.onpointermove=paintPointerMove;
+
+  c.onpointerup=paintPointerUp;
+
+  c.onpointercancel=paintPointerUp;
+
+  c.onpointerleave=paintPointerUp;
+ }
+}
+
+function setPaintMode(mode){
+
+ syncPaintFromCanvas();
+
+ state.paint.mode=mode;
+
+ state.paint.selectedObject=-1;
+
+ if(mode==="pixelmap")
+  ensurePixelData();
+
+ renderPaintEditor();
+}
+
+function setPaintTool(tool){
+
+ state.paint.tool=tool;
+
+ renderPaintEditor();
+}
+
+function applyPaintZoom(){
+
+ const c=getPaintCanvas();
+
+ if(c)
+  c.style.width=
+   (800*state.paint.zoom/100)+"px";
+
+ if(c)
+  c.style.height=
+   (500*state.paint.zoom/100)+"px";
+}
+
+function layerCanvas(layer){
+
+ if(!layer._canvas){
+
+  layer._canvas=
+   document.createElement("canvas");
+
+  layer._canvas.width=800;
+  layer._canvas.height=500;
+ }
+
+ return layer._canvas;
+}
+
+function loadLayerData(layer){
+
+ const c=layerCanvas(layer);
+
+ const ctx=c.getContext("2d");
+
+ ctx.clearRect(
+  0,0,
+  800,500
+ );
+
+ if(layer.dataURL){
+
+  const img=new Image();
+
+  img.onload=()=>{
+
+   ctx.drawImage(
+    img,
+    0,
+    0
+   );
+
+   renderPaintEditor();
+   syncPaintPreview();
+  };
+
+  img.src=layer.dataURL;
+ }
+}
+
+function syncPaintFromCanvas(){
+
+ const c=getPaintCanvas();
+
+ if(!c)return;
+
+ if(state.paint.mode==="bitmap"){
+
+  const layer=
+   state.paint.layers[
+    state.paint.activeLayer
+   ];
+
+  if(layer){
+
+   layer.dataURL=
+    c.toDataURL("image/png");
+
+   const lc=
+    layerCanvas(layer);
+
+   lc
+    .getContext("2d")
+    .clearRect(
+     0,
+     0,
+     800,
+     500
+    );
+
+   lc
+    .getContext("2d")
+    .drawImage(
+     c,
+     0,
+     0
+    );
+  }
+ }
+}
+
+function renderPaintEditor(){
+
+ const c=getPaintCanvas();
+
+ if(!c)return;
+
+ const ctx=c.getContext("2d");
+
+ ctx.clearRect(
+  0,
+  0,
+  800,
+  500
+ );
+
+ if(state.paint.mode==="bitmap"){
+
+  const layer=
+   state.paint.layers[
+    state.paint.activeLayer
+   ] ||
+   state.paint.layers[0];
+
+  state.paint.layers.forEach(l=>{
+
+   if(l.visible){
+
+    const lc=
+     layerCanvas(l);
+
+    if(
+     l.dataURL &&
+     !lc.dataset.loaded
+    ){
+
+     loadLayerData(l);
+
+     lc.dataset.loaded="1";
+    }
+
+    ctx.globalAlpha=
+     l.opacity||1;
+
+    ctx.drawImage(
+     lc,
+     0,
+     0
+    );
+   }
+
+  });
+
+  ctx.globalAlpha=1;
+
+ }else if(state.paint.mode==="vector"){
+
+  drawVectorObjects(ctx);
+
+ }else{
+
+  ensurePixelData();
+
+  drawPixelmap(ctx);
+ }
+
+ applyPaintZoom();
+
+ document
+  .querySelectorAll("[data-pmode]")
+  .forEach(
+   b=>
+    b.classList.toggle(
+     "active",
+     b.dataset.pmode===
+      state.paint.mode
+    )
+  );
+
+ document
+  .querySelectorAll("[data-tool]")
+  .forEach(
+   b=>
+    b.classList.toggle(
+     "active",
+     b.dataset.tool===
+      state.paint.tool
+    )
+  );
+
+ const layers=
+  document.getElementById("paintLayers");
+
+ if(layers)
+  layers.innerHTML=
+   state.paint.layers
+    .map(
+     (l,i)=>
+      `<div class="layer-row ${
+       i===state.paint.activeLayer
+        ?"active":""
+      }"
+       onclick="CS.selectPaintLayer(${i})">
+       <span class="layer-name">
+        ${l.visible?"👁":"🚫"} ${esc(l.name)}
+       </span>
+       <span>
+        ${Math.round((l.opacity||1)*100)}%
+       </span>
+      </div>`
+    )
+    .join("");
+
+ const sel=
+  document.getElementById(
+   "paintSelection"
+  );
+
+ if(sel)
+  sel.textContent=
+   state.paint.selectedObject>=0
+    ? `객체 ${state.paint.selectedObject+1}`
+    : "선택 없음";
+
+ syncPaintPreview();
+}
+
+function drawVectorObjects(ctx){
+
+ ctx.clearRect(
+  0,
+  0,
+  800,
+  500
+ );
+
+ state.paint.vectorObjects.forEach(
+  (o,i)=>{
+
+   if(
+    o.layer!==
+    state.paint.activeLayer
+   )
+    return;
+
+   ctx.save();
+
+   ctx.globalAlpha=
+    (o.alpha??100)/100;
+
+   ctx.strokeStyle=o.color;
+
+   ctx.fillStyle=
+    o.fill||"transparent";
+
+   ctx.lineWidth=
+    o.width||2;
+
+   if(o.type==="line"){
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+     o.x,
+     o.y
+    );
+
+    ctx.lineTo(
+     o.x2,
+     o.y2
+    );
+
+    ctx.stroke();
+   }
+
+   if(o.type==="rect"){
+
+    ctx.beginPath();
+
+    ctx.rect(
+     Math.min(o.x,o.x2),
+     Math.min(o.y,o.y2),
+     Math.abs(o.x2-o.x),
+     Math.abs(o.y2-o.y)
+    );
+
+    o.fill ?
+     ctx.fill() :
+     ctx.stroke();
+   }
+
+   if(o.type==="circle"){
+
+    const rx=
+     Math.abs(o.x2-o.x)/2;
+
+    const ry=
+     Math.abs(o.y2-o.y)/2;
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+     (o.x+o.x2)/2,
+     (o.y+o.y2)/2,
+     Math.max(1,rx),
+     Math.max(1,ry),
+     0,
+     0,
+     Math.PI*2
+    );
+
+    o.fill ?
+     ctx.fill() :
+     ctx.stroke();
+   }
+
+   if(o.type==="path"){
+
+    ctx.beginPath();
+
+    o.points.forEach(
+     (p,j)=>
+      j ?
+       ctx.lineTo(
+        p[0],
+        p[1]
+       ) :
+       ctx.moveTo(
+        p[0],
+        p[1]
+       )
+    );
+
+    ctx.stroke();
+   }
+
+   if(i===state.paint.selectedObject){
+
+    ctx.strokeStyle="#1976d2";
+
+    ctx.setLineDash([
+     6,
+     4
+    ]);
+
+    ctx.strokeRect(
+     o.x-5,
+     o.y-5,
+     (o.x2??o.x)-o.x+10,
+     (o.y2??o.y)-o.y+10
+    );
+
+    ctx.setLineDash([]);
+   }
+
+   ctx.restore();
+  }
+ );
+}
+
+function drawPixelmap(ctx){
+
+ ctx.clearRect(
+  0,
+  0,
+  800,
+  500
+ );
+
+ const sx=800/128;
+ const sy=500/80;
+
+ for(
+  let y=0;
+  y<80;
+  y++
+ )
+  for(
+   let x=0;
+   x<128;
+   x++
+  ){
+
+   const p=
+    state.paint.pixels[y][x];
+
+   if(p[3]){
+
+    ctx.fillStyle=
+     `rgba(
+       ${p[0]},
+       ${p[1]},
+       ${p[2]},
+       ${p[3]/255}
+     )`;
+
+    ctx.fillRect(
+     x*sx,
+     y*sy,
+     sx+.2,
+     sy+.2
+    );
+   }
+  }
+
+ ctx.strokeStyle="#ddd";
+ ctx.lineWidth=.5;
+
+ for(
+  let x=0;
+  x<=128;
+  x+=8
+ ){
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+   x*sx,
+   0
+  );
+
+  ctx.lineTo(
+   x*sx,
+   500
+  );
+
+  ctx.stroke();
+ }
+
+ for(
+  let y=0;
+  y<=80;
+  y+=8
+ ){
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+   0,
+   y*sy
+  );
+
+  ctx.lineTo(
+   800,
+   y*sy
+  );
+
+  ctx.stroke();
+ }
+}
+
+function paintPoint(e){
+
+ const c=getPaintCanvas();
+
+ const r=
+  c.getBoundingClientRect();
+
+ return {
+  x:
+   (e.clientX-r.left)*
+   (800/r.width),
+
+  y:
+   (e.clientY-r.top)*
+   (500/r.height)
+ };
+}
+
+let paintDrag=null;
+
+function paintPointerDown(e){
+
+ const p=paintPoint(e);
+
+ paintDrag={
+  start:p,
+  last:p
+ };
+
+ paintHistory();
+
+ if(state.paint.mode==="pixelmap"){
+
+  paintPixel(p);
+
+  paintDrag=null;
+
+  return;
+ }
+
+ if(state.paint.mode==="bitmap"){
+
+  if(state.paint.tool==="fill"){
+
+   fillBitmap(p);
+
+   paintDrag=null;
+
+   return;
+  }
+
+  if(state.paint.tool==="picker"){
+
+   pickBitmap(p);
+
+   paintDrag=null;
+
+   return;
+  }
+
+  if(state.paint.tool==="select")
+   return;
+
+  drawBitmapPoint(
+   p,
+   p
+  );
+
+ }else if(
+  state.paint.mode==="vector"
+ ){
+
+  if(
+   state.paint.tool==="select"
+  ){
+
+   state.paint.selectedObject=
+    findVectorObject(p);
+
+   return;
+  }
+ }
+}
+
+function paintPointerMove(e){
+
+ if(!paintDrag)
+  return;
+
+ const p=paintPoint(e);
+
+ const s=paintDrag.start;
+
+ if(state.paint.mode==="bitmap"){
+
+  if(
+   ["pen","eraser"]
+    .includes(state.paint.tool)
+  ){
+
+   drawBitmapPoint(
+    p,
+    paintDrag.last
+   );
+
+   paintDrag.last=p;
+
+  }else{
+
+   renderPaintEditor();
+
+   const ctx=getPaintCtx();
+
+   ctx.save();
+
+   ctx.strokeStyle=
+    state.paint.color;
+
+   ctx.globalAlpha=
+    state.paint.alpha/100;
+
+   ctx.lineWidth=
+    state.paint.width;
+
+   ctx.lineCap="round";
+
+   ctx.beginPath();
+
+   if(state.paint.tool==="line"){
+
+    ctx.moveTo(
+     s.x,
+     s.y
+    );
+
+    ctx.lineTo(
+     p.x,
+     p.y
+    );
+
+   }else if(
+    state.paint.tool==="rect"
+   ){
+
+    ctx.rect(
+     Math.min(s.x,p.x),
+     Math.min(s.y,p.y),
+     Math.abs(p.x-s.x),
+     Math.abs(p.y-s.y)
+    );
+
+   }else{
+
+    ctx.ellipse(
+     (s.x+p.x)/2,
+     (s.y+p.y)/2,
+     Math.abs(p.x-s.x)/2,
+     Math.abs(p.y-s.y)/2,
+     0,
+     0,
+     Math.PI*2
+    );
+   }
+
+   ctx.stroke();
+
+   ctx.restore();
+  }
+
+ }else if(
+  state.paint.mode==="vector"
+ ){
+
+  renderPaintEditor();
+
+  const ctx=getPaintCtx();
+
+  ctx.save();
+
+  ctx.strokeStyle=
+   state.paint.color;
+
+  ctx.globalAlpha=
+   state.paint.alpha/100;
+
+  ctx.lineWidth=
+   state.paint.width;
+
+  ctx.setLineDash([
+   6,
+   4
+  ]);
+
+  ctx.beginPath();
+
+  if(state.paint.tool==="line"){
+
+   ctx.moveTo(
+    s.x,
+    s.y
+   );
+
+   ctx.lineTo(
+    p.x,
+    p.y
+   );
+
+  }else if(
+   state.paint.tool==="rect"
+  ){
+
+   ctx.rect(
+    Math.min(s.x,p.x),
+    Math.min(s.y,p.y),
+    Math.abs(p.x-s.x),
+    Math.abs(p.y-s.y)
+   );
+
+  }else{
+
+   ctx.ellipse(
+    (s.x+p.x)/2,
+    (s.y+p.y)/2,
+    Math.abs(p.x-s.x)/2,
+    Math.abs(p.y-s.y)/2,
+    0,
+    0,
+    Math.PI*2
+   );
+  }
+
+  ctx.stroke();
+
+  ctx.restore();
+ }
+
+ paintDrag.last=p;
+}
+
+function paintPointerUp(e){
+
+ if(!paintDrag)
+  return;
+
+ const p=paintPoint(e);
+
+ const s=paintDrag.start;
+
+ if(
+  state.paint.mode==="vector" &&
+  state.paint.tool!=="select" &&
+  state.paint.tool!=="picker"
+ ){
+
+  let o=null;
+
+  if(
+   state.paint.tool==="pen"
+  )
+
+   o={
+    type:"path",
+    points:[
+     [s.x,s.y],
+     [p.x,p.y]
+    ],
+    color:state.paint.color,
+    alpha:state.paint.alpha,
+    width:state.paint.width,
+    layer:state.paint.activeLayer
+   };
+
+  if(
+   ["line","rect","circle"]
+    .includes(state.paint.tool)
+  )
+
+   o={
+    type:state.paint.tool,
+    x:s.x,
+    y:s.y,
+    x2:p.x,
+    y2:p.y,
+    color:state.paint.color,
+    alpha:state.paint.alpha,
+    width:state.paint.width,
+    layer:state.paint.activeLayer
+   };
+
+  if(o)
+   state.paint.vectorObjects.push(o);
+ }
+
+ paintDrag=null;
+
+ renderPaintEditor();
+
+ syncPaintFromCanvas();
+}
+
+function drawBitmapPoint(p,last){
+
+ const c=getPaintCtx();
+
+ if(!c)return;
+
+ c.save();
+
+ c.lineCap="round";
+
+ c.lineJoin="round";
+
+ c.lineWidth=
+  state.paint.width;
+
+ c.globalAlpha=
+  state.paint.alpha/100;
+
+ c.strokeStyle=
+  state.paint.tool==="eraser"
+   ?" #000".trim()
+   :state.paint.color;
+
+ if(
+  state.paint.tool==="eraser"
+ )
+  c.globalCompositeOperation=
+   "destination-out";
+
+ c.beginPath();
+
+ c.moveTo(
+  last.x,
+  last.y
+ );
+
+ c.lineTo(
+  p.x,
+  p.y
+ );
+
+ c.stroke();
+
+ c.restore();
+
+ syncPaintFromCanvas();
+}
+
+function fillBitmap(p){
+
+ const c=getPaintCtx();
+
+ if(!c)return;
+
+ const img=
+  c.getImageData(
+   0,
+   0,
+   800,
+   500
+  );
+
+ const x=Math.floor(p.x);
+ const y=Math.floor(p.y);
+
+ const idx=
+  (y*800+x)*4;
+
+ const target=[
+  img.data[idx],
+  img.data[idx+1],
+  img.data[idx+2],
+  img.data[idx+3]
+ ];
+
+ const fill=
+  rgba(
+   state.paint.color,
+   state.paint.alpha
+  );
+
+ if(
+  target.every(
+   (v,i)=>
+    Math.abs(
+     v-fill[i]
+    )<3
+  )
+ )
+  return;
+
+ const q=[
+  [x,y]
+ ];
+
+ const seen=
+  new Uint8Array(
+   800*500
+  );
+
+ while(q.length){
+
+  const [
+   cx,
+   cy
+  ]=q.pop();
+
+  if(
+   cx<0 ||
+   cy<0 ||
+   cx>=800 ||
+   cy>=500
+  )
+   continue;
+
+  const k=
+   cy*800+cx;
+
+  if(seen[k])
+   continue;
+
+  const j=k*4;
+
+  if(
+   Math.abs(
+    img.data[j]-
+    target[0]
+   )>3 ||
+   Math.abs(
+    img.data[j+1]-
+    target[1]
+   )>3 ||
+   Math.abs(
+    img.data[j+2]-
+    target[2]
+   )>3 ||
+   Math.abs(
+    img.data[j+3]-
+    target[3]
+   )>3
+  )
+   continue;
+
+  seen[k]=1;
+
+  img.data[j]=fill[0];
+  img.data[j+1]=fill[1];
+  img.data[j+2]=fill[2];
+  img.data[j+3]=fill[3];
+
+  q.push(
+   [cx+1,cy],
+   [cx-1,cy],
+   [cx,cy+1],
+   [cx,cy-1]
+  );
+ }
+
+ c.putImageData(
+  img,
+  0,
+  0
+ );
+
+ syncPaintFromCanvas();
+}
+
+function pickBitmap(p){
+
+ const d=
+  getPaintCtx()
+   .getImageData(
+    Math.floor(p.x),
+    Math.floor(p.y),
+    1,
+    1
+   ).data;
+
+ state.paint.color=
+  hexFromRgb(
+   d[0],
+   d[1],
+   d[2]
+  );
+
+ state.paint.alpha=
+  Math.round(
+   d[3]/2.55
+  );
+
+ renderPaintEditor();
+}
+
+function paintPixel(p){
+
+ ensurePixelData();
+
+ const x=
+  Math.floor(
+   p.x/(800/128)
+  );
+
+ const y=
+  Math.floor(
+   p.y/(500/80)
+  );
+
+ if(
+  x<0 ||
+  y<0 ||
+  x>=128 ||
+  y>=80
+ )
+  return;
+
+ const col=
+  state.paint.tool==="eraser" ?
+   [255,255,255,0] :
+   rgba(
+    state.paint.color,
+    state.paint.alpha
+   );
+
+ state.paint.pixels[y][x]=col;
+
+ renderPaintEditor();
+}
+
+function findVectorObject(p){
+
+ for(
+  let i=
+   state.paint.vectorObjects.length-1;
+  i>=0;
+  i--
+ ){
+
+  const o=
+   state.paint.vectorObjects[i];
+
+  if(
+   o.layer!==
+   state.paint.activeLayer
+  )
+   continue;
+
+  const minx=
+   Math.min(
+    o.x,
+    o.x2??o.x
+   )-8;
+
+  const maxx=
+   Math.max(
+    o.x,
+    o.x2??o.x
+   )+8;
+
+  const miny=
+   Math.min(
+    o.y,
+    o.y2??o.y
+   )-8;
+
+  const maxy=
+   Math.max(
+    o.y,
+    o.y2??o.y
+   )+8;
+
+  if(
+   p.x>=minx &&
+   p.x<=maxx &&
+   p.y>=miny &&
+   p.y<=maxy
+  )
+   return i;
+ }
+
+ return -1;
+}
+
+function syncPaintPreview(){
+
+ const prev=
+  document.getElementById(
+   "paintPreview"
+  );
+
+ if(!prev)return;
+
+ const ctx=
+  prev.getContext("2d");
+
+ ctx.clearRect(
+  0,
+  0,
+  320,
+  180
+ );
+
+ const c=getPaintCanvas();
+
+ if(c){
+
+  ctx.drawImage(
+   c,
+   0,
+   0,
+   320,
+   180
+  );
+
+  return;
+ }
+
+ if(
+  state.paint.mode==="pixelmap"
+ ){
+
+  ensurePixelData();
+
+  drawPixelmap(ctx);
+
+ }else if(
+  state.paint.mode==="vector"
+ ){
+
+  drawVectorObjects(ctx);
+
+ }else{
+
+  const layer=
+   state.paint.layers[
+    state.paint.activeLayer
+   ];
+
+  if(layer?.dataURL){
+
+   const img=new Image();
+
+   img.onload=()=>
+    ctx.drawImage(
+     img,
+     0,
+     0,
+     320,
+     180
+    );
+
+   img.src=
+    layer.dataURL;
+  }
+ }
+}
+
+function selectPaintLayer(i){
+
+ syncPaintFromCanvas();
+
+ state.paint.activeLayer=i;
+
+ renderPaintEditor();
+}
+
+function addPaintLayer(){
+
+ paintHistory();
+
+ state.paint.layers.push({
+  id:crypto.randomUUID(),
+  name:
+   `레이어 ${
+    state.paint.layers.length+1
+   }`,
+  visible:true,
+  opacity:1,
+  dataURL:null
+ });
+
+ state.paint.activeLayer=
+  state.paint.layers.length-1;
+
+ renderPaintEditor();
+}
+
+function renamePaintLayer(){
+
+ const l=
+  state.paint.layers[
+   state.paint.activeLayer
+  ];
+
+ if(!l)return;
+
+ const n=
+  prompt(
+   "레이어 이름",
+   l.name
+  );
+
+ if(n){
+
+  l.name=n;
+
+  renderPaintEditor();
+ }
+}
+
+function removePaintLayer(){
+
+ if(
+  state.paint.layers.length<=1
+ ){
+
+  alert(
+   "레이어는 최소 1개가 필요합니다."
+  );
+
+  return;
+ }
+
+ paintHistory();
+
+ state.paint.layers.splice(
+  state.paint.activeLayer,
+  1
+ );
+
+ state.paint.activeLayer=
+  Math.max(
+   0,
+   state.paint.activeLayer-1
+  );
+
+ renderPaintEditor();
+}
 
 function clearPaint(){
 
- const c=
-  document
-   .getElementById("paint")
-   ?.getContext("2d");
+ paintHistory();
 
- if(c)
-  c.clearRect(0,0,270,140);
+ if(
+  state.paint.mode==="vector"
+ ){
+
+  state.paint.vectorObjects=[];
+
+ }else if(
+  state.paint.mode==="pixelmap"
+ ){
+
+  ensurePixelData();
+
+  state.paint.pixels=
+   Array.from(
+    {length:80},
+    ()=>Array.from(
+     {length:128},
+     ()=>[255,255,255,0]
+    )
+   );
+
+ }else{
+
+  const c=getPaintCanvas();
+
+  if(c)
+   c.getContext("2d")
+    .clearRect(
+     0,
+     0,
+     800,
+     500
+    );
+
+  syncPaintFromCanvas();
+ }
+
+ renderPaintEditor();
+}
+
+function paintUndo(){
+
+ const x=
+  state.history.pop();
+
+ if(x){
+
+  state.future.push(
+   snap()
+  );
+
+  restore(x);
+ }
+}
+
+function paintRedo(){
+
+ const x=
+  state.future.pop();
+
+ if(x){
+
+  state.history.push(
+   snap()
+  );
+
+  restore(x);
+ }
+}
+
+function exportPaint(){
+
+ const c=getPaintCanvas();
+
+ if(!c)return;
+
+ syncPaintFromCanvas();
+
+ const a=
+  document.createElement("a");
+
+ a.download=
+  `${state.project||"codescript"}-그림.png`;
+
+ a.href=
+  c.toDataURL(
+   "image/png"
+  );
+
+ a.click();
+}
+
+function savePaintToProject(){
+
+ syncPaintFromCanvas();
+
+ localStorage.setItem(
+  "codescript_paint",
+  JSON.stringify(
+   state.paint
+  )
+ );
+
+ syncPaintPreview();
+
+ alert(
+  "그림판이 프로젝트에 적용되었습니다."
+ );
 }
 
 /* ---------------------------------------------------------
@@ -1821,81 +3271,121 @@ window.CS={
  publish,
 
  undo:()=>{
-  const x=state.history.pop();
+  const x=
+   state.history.pop();
 
   if(x){
-   state.future.push(snap());
+
+   state.future.push(
+    snap()
+   );
+
    restore(x);
   }
  },
 
  redo:()=>{
-  const x=state.future.pop();
+  const x=
+   state.future.pop();
 
   if(x){
-   state.history.push(snap());
+
+   state.history.push(
+    snap()
+   );
+
    restore(x);
   }
  },
 
  clear:()=>{
-  state.history.push(snap());
+  state.history.push(
+   snap()
+  );
+
   state.code=[];
+
   render();
  },
 
  newVar:()=>{
+
   const n=
    prompt(
     "변수 이름",
-    "변수"+(state.vars.length+1)
+    "변수"+
+     (state.vars.length+1)
    );
 
   if(n){
+
    state.vars.push(n);
+
    render();
    palette();
   }
  },
 
  newList:()=>{
+
   const n=
    prompt(
     "리스트 이름",
-    "리스트"+(state.lists.length+1)
+    "리스트"+
+     (state.lists.length+1)
    );
 
   if(n){
+
    state.lists.push(n);
+
    render();
    palette();
   }
  },
 
  newFunc:()=>{
-  const n=prompt("함수 이름");
+
+  const n=
+   prompt(
+    "함수 이름"
+   );
 
   if(n){
+
    state.funcs.push(n);
+
    render();
   }
  },
 
  del:i=>{
-  state.history.push(snap());
-  state.code.splice(i,1);
+
+  state.history.push(
+   snap()
+  );
+
+  state.code.splice(
+   i,
+   1
+  );
+
   render();
  },
 
  createRoom:()=>{
+
   request({
    type:"create_room"
   });
  },
 
  joinRoom:()=>{
+
   const id=
-   prompt("방 코드");
+   prompt(
+    "방 코드"
+   );
 
   if(id)
    request({
@@ -1912,7 +3402,21 @@ window.CS={
    시작
    --------------------------------------------------------- */
 
+try{
+
+ const savedPaint=
+  localStorage.getItem(
+   "codescript_paint"
+  );
+
+ if(savedPaint)
+  state.paint=
+   JSON.parse(
+    savedPaint
+   );
+
+}catch{}
+
 home();
 
 })();
-```
