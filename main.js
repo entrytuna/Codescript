@@ -1,2722 +1,2376 @@
-(() => {
+(()=>{
 "use strict";
 
 /* =========================================================
-   CODESCRIPT FINAL
+   CODESCRIPT MAIN.JS
    ========================================================= */
 
-const CATS = [
-  ["start","시작","#ef5350"],
-  ["flow","흐름","#42a5f5"],
-  ["move","움직임","#ff9800"],
-  ["looks","생김새","#ffd54f"],
-  ["brush","붓","#795548"],
-  ["text","글상자","#8bc34a"],
-  ["sound","소리","#ec407a"],
-  ["judge","판단","#4fc3f7"],
-  ["calc","계산","#43a047"],
-  ["online","온라인","#90a4ae"],
-  ["data","자료","#8e44ad"],
-  ["func","함수","#00acc1"]
-];
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
 
-const COLORS = Object.fromEntries(
-  CATS.map(x => [x[0],x[2]])
-);
-
-/* ---------------------------------------------------------
-   BLOCKS
-   --------------------------------------------------------- */
-
-const DEFINITIONS = [
-  ["start","초록 깃발을 클릭했을 때","start"],
-  ["start","키를 눌렀을 때","start"],
-  ["start","오브젝트를 클릭했을 때","start"],
-  ["start","실행 시작","start"],
-
-  ["flow","1초 기다리기","wait",1],
-  ["flow","2초 기다리기","wait",2],
-  ["flow","10번 반복하기","repeat",10],
-  ["flow","무한 반복하기","forever"],
-  ["flow","반복 중단","break"],
-  ["flow","만약","if"],
-  ["flow","아니면","else"],
-
-  ["move","10만큼 움직이기","move",10],
-  ["move","-10만큼 움직이기","move",-10],
-  ["move","x 10만큼 움직이기","movex",10],
-  ["move","x -10만큼 움직이기","movex",-10],
-  ["move","y 10만큼 움직이기","movey",10],
-  ["move","y -10만큼 움직이기","movey",-10],
-  ["move","x좌표 0으로 이동","setx",0],
-  ["move","y좌표 0으로 이동","sety",0],
-  ["move","방향 90도로 정하기","direction",90],
-  ["move","15도 시계방향 회전","turn",15],
-  ["move","15도 반시계방향 회전","turn",-15],
-  ["move","가운데로 이동","center"],
-
-  ["looks","안녕이라고 말하기","say","안녕"],
-  ["looks","생각하기","think","음..."],
-  ["looks","말하기 지우기","clearSay"],
-  ["looks","보이기","show"],
-  ["looks","숨기기","hide"],
-  ["looks","크기 100%로 정하기","size",100],
-  ["looks","크기 50%로 정하기","size",50],
-  ["looks","크기 150%로 정하기","size",150],
-  ["looks","모양 바꾸기","costume"],
-
-  ["brush","펜 내리기","penDown"],
-  ["brush","펜 올리기","penUp"],
-  ["brush","모두 지우기","clearPaint"],
-  ["brush","도장 찍기","stamp"],
-  ["brush","펜 굵기 5로 정하기","penWidth",5],
-  ["brush","펜 굵기 10으로 정하기","penWidth",10],
-
-  ["text","글자 쓰기","text","Hello"],
-  ["text","글자 지우기","clearText"],
-
-  ["sound","소리 재생하기","sound"],
-  ["sound","모든 소리 멈추기","stopSound"],
-
-  ["judge","키가 눌렸는지","key"],
-  ["judge","마우스를 클릭했는지","mouse"],
-  ["judge","변수가 0보다 큰지","greater",0],
-  ["judge","변수가 0인지","equal",0],
-
-  ["calc","더하기","add",1,1],
-  ["calc","빼기","sub",1,1],
-  ["calc","곱하기","mul",2,2],
-  ["calc","나누기","div",10,2],
-  ["calc","나머지","mod",10,3],
-  ["calc","랜덤 수","random",1,10],
-  ["calc","반올림","round",1.5],
-  ["calc","절댓값","abs",-5],
-
-  ["online","온라인 방 만들기","roomCreate"],
-  ["online","온라인 방 참가하기","roomJoin"],
-  ["online","채팅 보내기","chat"],
-  ["online","내 이름 가져오기","username"],
-
-  ["data","변수 만들기","newVar","변수"],
-  ["data","변수에 값 넣기","setVar","변수",0],
-  ["data","변수 값 바꾸기","changeVar","변수",1],
-  ["data","변수 보이기","showVar","변수"],
-  ["data","변수 숨기기","hideVar","변수"],
-  ["data","리스트 만들기","newList","목록"],
-  ["data","리스트에 추가하기","pushList","목록","값"],
-  ["data","리스트 모두 삭제","clearList","목록"],
-
-  ["func","함수 만들기","newFunc","함수"],
-  ["func","함수 실행하기","callFunc","함수"]
-];
-
-const BLOCKS = [];
-
-for (const d of DEFINITIONS) {
-  BLOCKS.push({
-    id: "b" + (BLOCKS.length + 1),
-    cat: d[0],
-    name: d[1],
-    action: d.slice(2),
-    color: COLORS[d[0]]
-  });
-}
-
-/* 실제 동작을 가지는 추가 블록 */
-const generators = [
-  ["move","%d만큼 움직이기","move", -100,100,5],
-  ["move","x %d만큼 이동하기","movex",-100,100,5],
-  ["move","y %d만큼 이동하기","movey",-100,100,5],
-  ["move","%d도 회전하기","turn",-360,360,15],
-
-  ["looks","크기 %d%%로 정하기","size",10,200,10],
-  ["looks","%d초 동안 말하기","sayTime",1,10,1],
-
-  ["brush","펜 굵기 %d로 정하기","penWidth",1,50,1],
-
-  ["flow","%d초 기다리기","wait",0,20,1],
-  ["flow","%d번 반복하기","repeat",1,100,1],
-
-  ["calc","%d + %d","add",-100,100,5],
-  ["calc","%d - %d","sub",-100,100,5],
-  ["calc","%d × %d","mul",-20,20,1],
-  ["calc","%d ÷ %d","div",-100,100,5],
-
-  ["data","변수에 %d 더하기","changeVar","변수",-100,100,5]
-];
-
-let seed = 1;
-
-function valueSeries(min,max,step) {
-  const a = [];
-  for(let x=min;x<=max;x+=step) {
-    a.push(x);
-  }
-  return a;
-}
-
-for(const g of generators) {
-  const cat = g[0];
-  const template = g[1];
-  const action = g[2];
-
-  if(action === "move" ||
-     action === "movex" ||
-     action === "movey" ||
-     action === "turn" ||
-     action === "size" ||
-     action === "penWidth" ||
-     action === "wait" ||
-     action === "repeat") {
-
-    for(const v of valueSeries(g[3],g[4],g[5])) {
-      BLOCKS.push({
-        id:"b"+(++seed)+BLOCKS.length,
-        cat,
-        name:template.replace("%d",v),
-        action:[action,v],
-        color:COLORS[cat]
-      });
-    }
-  }
-
-  if(action === "sayTime") {
-    for(let v=1;v<=10;v++) {
-      BLOCKS.push({
-        id:"b"+(++seed)+BLOCKS.length,
-        cat,
-        name:template.replace("%d",v),
-        action:[action,v],
-        color:COLORS[cat]
-      });
-    }
-  }
-
-  if(action==="add" ||
-     action==="sub" ||
-     action==="mul" ||
-     action==="div") {
-
-    for(let a=-10;a<=10;a++) {
-      for(let b=-10;b<=10;b++) {
-        BLOCKS.push({
-          id:"b"+(++seed)+BLOCKS.length,
-          cat,
-          name:template
-            .replace("%d",a)
-            .replace("%d",b),
-          action:[action,a,b],
-          color:COLORS[cat]
-        });
-
-        if(BLOCKS.length>=499) break;
-      }
-
-      if(BLOCKS.length>=499) break;
-    }
-  }
-}
-
-/* 499개까지 실제 액션을 가진 블록으로 채움 */
-const fallbackActions = [
-  ["move",x=>["move",x]],
-  ["looks",x=>["size",x]],
-  ["brush",x=>["penWidth",x]],
-  ["flow",x=>["wait",x]],
-  ["calc",x=>["add",x,1]],
-  ["data",x=>["changeVar","변수",x]]
-];
-
-let f = 0;
-
-while(BLOCKS.length < 499) {
-  const cat = fallbackActions[f % fallbackActions.length][0];
-  const val = (BLOCKS.length % 20) + 1;
-  const maker = fallbackActions[f % fallbackActions.length][1];
-
-  BLOCKS.push({
-    id:"b"+BLOCKS.length,
-    cat,
-    name:
-      cat==="move" ? val+"만큼 움직이기" :
-      cat==="looks" ? "크기 "+val+"%로 정하기" :
-      cat==="brush" ? "펜 굵기 "+val :
-      cat==="flow" ? val+"초 기다리기" :
-      cat==="calc" ? val+" 더하기 1" :
-      "변수에 "+val+" 더하기",
-    action:maker(val),
-    color:COLORS[cat]
-  });
-
-  f++;
-}
-
-BLOCKS.length = 499;
-
-/* ---------------------------------------------------------
-   STATE
-   --------------------------------------------------------- */
-
-const state = {
-  page:"home",
-  category:"all",
-
-  user:null,
-
-  code:[],
-
-  objects:[
-    {
-      id:"obj1",
-      name:"오브젝트 1",
-      x:320,
-      y:220,
-      size:100,
-      direction:90,
-      visible:true,
-      costume:null,
-      sound:null
-    }
-  ],
-
-  selectedObject:"obj1",
-
-  vars:{},
-  lists:{},
-  funcs:{},
-
-  sounds:[],
-
-  project:{
-    name:"나의 프로젝트",
-    id:null,
-    public:false
-  },
-
-  paint:{
-    mode:"bitmap",
-    tool:"pen",
-    color:"#111111",
-    alpha:100,
-    width:8,
-    zoom:100,
-    canvas:null,
-    ctx:null,
-    drawing:false,
-    lastX:0,
-    lastY:0,
-    startX:0,
-    startY:0,
-    layers:[
-      {
-        name:"배경",
-        visible:true,
-        opacity:1,
-        canvas:null
-      }
-    ],
-    activeLayer:0,
-    history:[],
-    future:[]
-  },
-
-  audio:{
-    recorder:null,
-    chunks:[],
-    recording:false
-  },
-
-  running:false,
-  stop:false,
-  ws:null,
-  room:null
+const COLORS={
+ start:"#e74c3c",
+ flow:"#3498db",
+ move:"#f39c12",
+ looks:"#f1c40f",
+ brush:"#795548",
+ text:"#7fc97f",
+ sound:"#e91e63",
+ judge:"#5dade2",
+ calc:"#27ae60",
+ online:"#78909c",
+ data:"#8e44ad",
+ func:"#9b59b6"
 };
 
-/* ---------------------------------------------------------
+const CAT_NAMES={
+ start:"시작",
+ flow:"흐름",
+ move:"이동",
+ looks:"모양",
+ brush:"붓",
+ text:"텍스트",
+ sound:"소리",
+ judge:"판단",
+ calc:"계산",
+ online:"온라인",
+ data:"데이터",
+ func:"함수"
+};
+
+/* =========================================================
+   STATE
+   ========================================================= */
+
+const state={
+ page:"home",
+ mode:"offline",
+ category:"all",
+ projectName:"나의 프로젝트",
+ user:null,
+
+ code:[],
+ objects:[],
+ selectedObject:0,
+
+ variables:{},
+ lists:{},
+
+ sounds:[],
+
+ running:false,
+ stop:false,
+
+ actor:{
+  x:160,
+  y:130,
+  direction:0,
+  size:100,
+  visible:true
+ },
+
+ paint:{
+  color:"#111111",
+  width:6,
+  tool:"pen",
+  undo:[],
+  redo:[]
+ }
+};
+
+/* =========================================================
+   BLOCK DEFINITIONS
+   ========================================================= */
+
+const blocks=[];
+
+function B(cat,name,op,...args){
+ blocks.push({
+  id:blocks.length,
+  cat,
+  name,
+  op,
+  args
+ });
+}
+
+/* 시작 */
+B("start","시작하기","start");
+
+/* 흐름 */
+B("flow","10번 반복하기","repeat",10);
+B("flow","5번 반복하기","repeat",5);
+B("flow","3번 반복하기","repeat",3);
+B("flow","1초 기다리기","wait",1);
+B("flow","2초 기다리기","wait",2);
+B("flow","계속 반복하기","forever");
+
+/* 이동 */
+B("move","10만큼 움직이기","move",10);
+B("move","20만큼 움직이기","move",20);
+B("move","50만큼 움직이기","move",50);
+B("move","90도 돌기","turn",90);
+B("move","-90도 돌기","turn",-90);
+B("move","180도 돌기","turn",180);
+B("move","오른쪽 보기","direction",0);
+B("move","왼쪽 보기","direction",180);
+B("move","위쪽 보기","direction",-90);
+B("move","아래쪽 보기","direction",90);
+
+/* 모양 */
+B("looks","보이기","show");
+B("looks","숨기기","hide");
+B("looks","크기 50%","size",50);
+B("looks","크기 100%","size",100);
+B("looks","크기 150%","size",150);
+B("looks","크기 200%","size",200);
+B("looks","다음 오브젝트","nextObject");
+B("looks","첫 번째 오브젝트 선택","selectObject",0);
+
+/* 텍스트 */
+B("text","안녕! 말하기","say","안녕!");
+B("text","Hello 말하기","say","Hello!");
+B("text","준비 완료! 말하기","say","준비 완료!");
+B("text","텍스트 입력하기","say","");
+
+/* 붓 */
+B("brush","펜 내리기","penDown");
+B("brush","펜 올리기","penUp");
+B("brush","펜 굵기 3","penWidth",3);
+B("brush","펜 굵기 5","penWidth",5);
+B("brush","펜 굵기 10","penWidth",10);
+B("brush","펜 굵기 20","penWidth",20);
+B("brush","펜 색 검정","penColor","#000000");
+B("brush","펜 색 빨강","penColor","#ff0000");
+B("brush","펜 색 파랑","penColor","#0000ff");
+
+/* 소리 */
+B("sound","첫 번째 소리 재생","sound",0);
+B("sound","모든 소리 정지","stopSound");
+
+/* 판단 */
+B("judge","만약 실행하기","if");
+B("judge","조건 참","condition",true);
+B("judge","조건 거짓","condition",false);
+
+/* 계산 */
+B("calc","1 + 1","add",1,1);
+B("calc","5 + 10","add",5,10);
+B("calc","10 - 3","sub",10,3);
+B("calc","2 × 5","mul",2,5);
+B("calc","10 ÷ 2","div",10,2);
+B("calc","랜덤 1~10","random",1,10);
+B("calc","랜덤 1~100","random",1,100);
+
+/* 데이터 */
+B("data","점수 변수 만들기","varCreate","점수");
+B("data","점수에 1 더하기","varAdd","점수",1);
+B("data","점수에 10 더하기","varAdd","점수",10);
+B("data","목록 만들기","listCreate","목록");
+B("data","목록에 값 추가","listAdd","목록","값");
+B("data","목록 길이","listLength","목록");
+
+/* 함수 */
+B("func","함수 만들기","funcCreate","함수1");
+B("func","함수 실행하기","funcCall","함수1");
+
+/* 온라인 */
+B("online","방 만들기","roomCreate");
+B("online","방 참가하기","roomJoin");
+B("online","메시지 보내기","broadcast","안녕!");
+
+/*
+  499개까지 실제 동작 가능한 파라미터 변형을 생성한다.
+  단순히 이름만 만드는 것이 아니라 각각 실제 action을 가진다.
+*/
+
+let variant=1;
+
+while(blocks.length<499){
+
+ const type=variant%8;
+
+ if(type===0){
+  B(
+   "move",
+   `${variant}만큼 움직이기`,
+   "move",
+   variant
+  );
+ }
+
+ else if(type===1){
+  const size=25+(variant%176);
+  B(
+   "looks",
+   `크기 ${size}%`,
+   "size",
+   size
+  );
+ }
+
+ else if(type===2){
+  B(
+   "calc",
+   `${variant} + ${variant+1}`,
+   "add",
+   variant,
+   variant+1
+  );
+ }
+
+ else if(type===3){
+  B(
+   "calc",
+   `${variant+5} × ${variant}`,
+   "mul",
+   variant+5,
+   variant
+  );
+ }
+
+ else if(type===4){
+  const count=1+(variant%20);
+  B(
+   "flow",
+   `${count}번 반복하기`,
+   "repeat",
+   count
+  );
+ }
+
+ else if(type===5){
+  const width=1+(variant%50);
+  B(
+   "brush",
+   `펜 굵기 ${width}`,
+   "penWidth",
+   width
+  );
+ }
+
+ else if(type===6){
+  const wait=(variant%10)+1;
+  B(
+   "flow",
+   `${wait}초 기다리기`,
+   "wait",
+   wait
+  );
+ }
+
+ else{
+  B(
+   "text",
+   `문자 ${variant} 말하기`,
+   "say",
+   `문자 ${variant}`
+  );
+ }
+
+ variant++;
+}
+
+/* 안전 확인 */
+if(blocks.length!==499){
+ throw new Error("Codescript block count error");
+}
+
+/* =========================================================
    CSS
-   --------------------------------------------------------- */
+   ========================================================= */
 
-const css = document.createElement("style");
+function style(){
 
-css.textContent = `
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;font-family:Arial,"Noto Sans KR",sans-serif;background:#f4f6f8;color:#222}
-button,input,select{font:inherit}
-button{cursor:pointer;border:0}
-#app{height:100%}
+ return `
+<style>
+
+*{
+ box-sizing:border-box;
+}
+
+body{
+ margin:0;
+ font-family:Arial,"Noto Sans KR",sans-serif;
+ background:#f4f6f8;
+ color:#222;
+}
+
+button,
+input,
+select{
+ font:inherit;
+}
+
+button{
+ border:0;
+ border-radius:8px;
+ padding:8px 12px;
+ cursor:pointer;
+ background:#e8edf2;
+}
+
+button:hover{
+ filter:brightness(.96);
+}
 
 .top{
-height:58px;
-background:#20242a;
-color:white;
-display:flex;
-align-items:center;
-padding:0 16px;
-gap:10px
+ height:56px;
+ display:flex;
+ align-items:center;
+ gap:8px;
+ padding:0 14px;
+ background:#fff;
+ border-bottom:1px solid #ddd;
 }
 
 .logo{
-font-size:21px;
-font-weight:900;
-margin-right:20px
+ font-size:21px;
+ font-weight:800;
 }
 
-.top button{
-background:#30363d;
-color:white;
-padding:9px 13px;
-border-radius:8px
+.spacer{
+ flex:1;
 }
 
-.top button:hover{background:#424952}
-
-.userbox{margin-left:auto;display:flex;gap:8px;align-items:center}
-
-.layout{
-height:calc(100% - 58px);
-display:grid;
-grid-template-columns:220px 1fr 330px;
-overflow:hidden
+.hero{
+ max-width:850px;
+ margin:60px auto;
+ padding:45px;
+ background:#fff;
+ border-radius:18px;
+ text-align:center;
+ box-shadow:0 5px 25px #0001;
 }
 
-.sidebar{
-background:#fff;
-border-right:1px solid #ddd;
-overflow:auto;
-padding:10px
+.hero h1{
+ font-size:44px;
+ margin:10px;
 }
 
-.cat{
-padding:10px 12px;
-margin-bottom:5px;
-border-radius:8px;
-cursor:pointer;
-font-weight:700
+.hero button{
+ margin:5px;
 }
 
-.cat:hover,.cat.active{background:#e9edf1}
+.editor{
+ display:grid;
+ grid-template-columns:175px minmax(400px,1fr) 350px;
+ height:calc(100vh - 56px);
+}
+
+.categories{
+ background:#fff;
+ border-right:1px solid #ddd;
+ padding:8px;
+ overflow:auto;
+}
+
+.category{
+ width:100%;
+ text-align:left;
+ margin-bottom:4px;
+}
+
+.main{
+ min-width:0;
+ display:flex;
+ flex-direction:column;
+}
+
+.toolbar{
+ background:#fff;
+ padding:8px;
+ border-bottom:1px solid #ddd;
+ display:flex;
+ gap:7px;
+ flex-wrap:wrap;
+}
 
 .blocks{
-padding:10px;
-overflow:auto;
-background:#eef1f4
+ flex:1;
+ overflow:auto;
+ padding:12px;
 }
 
 .block{
-color:white;
-padding:10px 12px;
-border-radius:8px;
-margin:7px 0;
-font-weight:700;
-box-shadow:0 2px 3px #0002;
-cursor:pointer;
-user-select:none
+ display:inline-block;
+ color:#fff;
+ padding:9px 13px;
+ border-radius:8px;
+ margin:4px;
+ cursor:pointer;
+ user-select:none;
+ max-width:100%;
 }
 
-.block:hover{transform:translateX(2px)}
-
-.workspace{
-position:relative;
-background:#e7eaee;
-overflow:auto;
-padding:15px
+.block:hover{
+ transform:translateY(-1px);
 }
 
-.codearea{
-min-height:100%;
-background:white;
-border-radius:12px;
-padding:15px;
-box-shadow:0 2px 10px #0001
+.code{
+ min-height:145px;
+ max-height:230px;
+ overflow:auto;
+ background:#edf0f3;
+ border-top:1px solid #ddd;
+ padding:10px;
 }
 
-.codeblock{
-padding:10px 13px;
-border-radius:8px;
-color:white;
-margin:7px 0;
-font-weight:700;
-display:flex;
-justify-content:space-between
+.side{
+ background:#fff;
+ border-left:1px solid #ddd;
+ overflow:auto;
+ padding:10px;
 }
-
-.codeblock small{opacity:.7;cursor:pointer}
 
 .stage{
-width:640px;
-height:400px;
-background:white;
-border:2px solid #222;
-position:relative;
-margin:0 auto 15px;
-overflow:hidden
+ height:280px;
+ background:#fff;
+ border:1px solid #aaa;
+ position:relative;
+ overflow:hidden;
 }
 
-.object{
-position:absolute;
-transform-origin:center;
-cursor:pointer;
-min-width:45px;
-min-height:45px;
-display:flex;
-align-items:center;
-justify-content:center;
-font-weight:900;
-font-size:18px;
-border-radius:12px;
-background:#69aefc;
-border:2px solid #3578bd;
-user-select:none
-}
-
-.object.selected{
-outline:3px solid #111;
-outline-offset:3px
-}
-
-.right{
-background:white;
-border-left:1px solid #ddd;
-overflow:auto;
-padding:10px
+.sprite{
+ position:absolute;
+ transform:translate(-50%,-50%);
+ font-size:42px;
+ user-select:none;
 }
 
 .panel{
-border:1px solid #ddd;
-border-radius:10px;
-padding:10px;
-margin-bottom:10px
+ margin-top:10px;
+ border:1px solid #ddd;
+ border-radius:10px;
+ padding:10px;
 }
 
-.panel h3{
-margin:0 0 10px;
-font-size:15px
+.panel-title{
+ font-weight:bold;
+ margin-bottom:8px;
 }
 
-.objrow,.soundrow,.layerrow{
-display:flex;
-align-items:center;
-gap:6px;
-padding:8px;
-border-radius:7px;
-margin-bottom:4px;
-background:#f2f4f6;
-cursor:pointer
+.object{
+ padding:8px;
+ border-radius:7px;
+ cursor:pointer;
 }
 
-.objrow.active,.layerrow.active{background:#dfeaff}
+.object:hover{
+ background:#f0f3f7;
+}
 
-.objname{flex:1}
+.object.selected{
+ background:#dce9ff;
+}
 
-.smallbtn{
-padding:5px 7px;
-border-radius:6px;
-background:#ddd
+.sound-item{
+ display:flex;
+ align-items:center;
+ gap:6px;
+ padding:7px 0;
+ border-bottom:1px solid #eee;
 }
 
 .modal{
-position:fixed;
-inset:0;
-background:#0008;
-display:none;
-align-items:center;
-justify-content:center;
-z-index:1000
+ position:fixed;
+ inset:0;
+ background:#0008;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ z-index:1000;
 }
 
-.modal.show{display:flex}
-
-.dialog{
-background:white;
-width:min(1100px,94vw);
-height:min(760px,92vh);
-border-radius:15px;
-display:flex;
-flex-direction:column;
-overflow:hidden
+.modal-box{
+ background:#fff;
+ border-radius:14px;
+ padding:16px;
+ max-width:96vw;
+ max-height:94vh;
+ overflow:auto;
 }
 
-.dialoghead{
-padding:12px 15px;
-border-bottom:1px solid #ddd;
-display:flex;
-align-items:center;
-gap:8px
+.paint-tools{
+ display:flex;
+ gap:6px;
+ flex-wrap:wrap;
+ margin-bottom:10px;
 }
 
-.dialoghead b{font-size:18px}
-
-.dialogbody{
-flex:1;
-overflow:auto;
-padding:12px
+.paint-canvas{
+ border:1px solid #777;
+ display:block;
+ background:#fff;
+ touch-action:none;
+ max-width:90vw;
 }
 
-.paintbar{
-display:flex;
-flex-wrap:wrap;
-gap:6px;
-padding:8px;
-background:#f0f2f4;
-border-radius:9px;
-margin-bottom:10px
+.auth-input{
+ width:280px;
+ padding:11px;
+ border:1px solid #bbb;
+ border-radius:8px;
 }
 
-.paintbar button,.paintbar label{
-padding:7px 10px;
-background:white;
-border:1px solid #ccc;
-border-radius:7px;
-cursor:pointer
+.small{
+ font-size:13px;
+ color:#666;
 }
 
-.paintcanvaswrap{
-background:#aaa;
-height:520px;
-overflow:auto;
-display:flex;
-align-items:center;
-justify-content:center;
-padding:20px
-}
-
-#paintCanvas{
-background:white;
-box-shadow:0 2px 8px #0004;
-touch-action:none
-}
-
-.login{
-height:100%;
-display:flex;
-align-items:center;
-justify-content:center;
-background:linear-gradient(135deg,#eaf2ff,#f6f7f9)
-}
-
-.loginbox{
-width:380px;
-max-width:92vw;
-background:white;
-padding:30px;
-border-radius:18px;
-box-shadow:0 10px 40px #0002
-}
-
-.loginbox h1{text-align:center;margin-top:0}
-
-.loginbox input{
-width:100%;
-padding:12px;
-margin:6px 0;
-border:1px solid #ccc;
-border-radius:8px
-}
-
-.loginbox button.main{
-width:100%;
-padding:12px;
-background:#3578ef;
-color:white;
-border-radius:8px;
-margin-top:8px;
-font-weight:800
-}
-
-.switch{
-text-align:center;
-margin-top:12px;
-cursor:pointer;
-color:#3578ef
-}
-
-.home{
-height:100%;
-display:flex;
-align-items:center;
-justify-content:center;
-text-align:center
-}
-
-.homebox h1{font-size:48px;margin:0 0 10px}
-.homebox p{color:#666}
-
-.homebuttons{
-display:flex;
-gap:10px;
-justify-content:center;
-margin-top:25px
-}
-
-.homebuttons button{
-padding:14px 25px;
-border-radius:10px;
-background:#3578ef;
-color:white;
-font-weight:800
-}
-
-.fileinput{display:none}
-
-.range{
-width:100px
-}
+</style>
 `;
-
-document.head.appendChild(css);
-
-/* ---------------------------------------------------------
-   HELPERS
-   --------------------------------------------------------- */
-
-const $ = s => document.querySelector(s);
-
-function esc(v){
-  return String(v)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;");
 }
 
-function selectedObject(){
-  return state.objects.find(
-    o=>o.id===state.selectedObject
-  ) || state.objects[0];
+/* =========================================================
+   AUTH
+   ========================================================= */
+
+function accounts(){
+ try{
+  return JSON.parse(
+   localStorage.getItem("codescript_accounts")||"{}"
+  );
+ }catch(e){
+  return {};
+ }
 }
 
-function catName(id){
-  return CATS.find(x=>x[0]===id)?.[1] || id;
+function saveAccounts(a){
+ localStorage.setItem(
+  "codescript_accounts",
+  JSON.stringify(a)
+ );
 }
 
-/* ---------------------------------------------------------
-   API
-   --------------------------------------------------------- */
+function auth(){
 
-async function api(url,options={}){
-  const r = await fetch(url,{
-    credentials:"include",
-    ...options,
-    headers:{
-      "content-type":"application/json",
-      ...(options.headers||{})
-    }
-  });
+ document.body.innerHTML=
+ style()+
+ `
+ <div class="hero">
 
-  const data = await r.json().catch(()=>({
-    ok:false,
-    error:"서버 응답 오류"
-  }));
+  <h2>🎮 Codescript</h2>
 
-  if(!r.ok) throw new Error(data.error || "요청 실패");
+  <input
+   id="authUser"
+   class="auth-input"
+   placeholder="아이디"
+  >
 
-  return data;
+  <br><br>
+
+  <input
+   id="authPass"
+   class="auth-input"
+   type="password"
+   placeholder="비밀번호"
+  >
+
+  <br><br>
+
+  <button id="loginBtn">로그인</button>
+  <button id="signupBtn">회원가입</button>
+  <button id="authBack">뒤로</button>
+
+  <p id="authMsg"></p>
+
+ </div>
+ `;
+
+ $("#loginBtn").onclick=()=>{
+  const u=$("#authUser").value.trim();
+  const p=$("#authPass").value;
+
+  const db=accounts();
+
+  if(!u||!p){
+   $("#authMsg").textContent=
+    "아이디와 비밀번호를 입력하세요.";
+   return;
+  }
+
+  if(db[u]!==p){
+   $("#authMsg").textContent=
+    "아이디 또는 비밀번호가 틀렸습니다.";
+   return;
+  }
+
+  state.user=u;
+  localStorage.setItem("codescript_user",u);
+
+  home();
+ };
+
+ $("#signupBtn").onclick=()=>{
+  const u=$("#authUser").value.trim();
+  const p=$("#authPass").value;
+
+  if(!u||!p){
+   $("#authMsg").textContent=
+    "아이디와 비밀번호를 입력하세요.";
+   return;
+  }
+
+  const db=accounts();
+
+  if(db[u]){
+   $("#authMsg").textContent=
+    "이미 존재하는 아이디입니다.";
+   return;
+  }
+
+  db[u]=p;
+  saveAccounts(db);
+
+  $("#authMsg").textContent=
+   "회원가입 완료! 로그인 버튼을 눌러주세요.";
+ };
+
+ $("#authBack").onclick=home;
 }
 
-/* ---------------------------------------------------------
-   LOGIN
-   --------------------------------------------------------- */
-
-function loginPage(signup=false){
-
-  $("#app").innerHTML = `
-    <div class="login">
-      <div class="loginbox">
-        <h1>🎮 Codescript</h1>
-        <p style="text-align:center;color:#777">
-          ${signup ? "새 계정 만들기":"로그인"}
-        </p>
-
-        <input id="authUser"
-          placeholder="아이디"
-          autocomplete="username">
-
-        <input id="authPass"
-          type="password"
-          placeholder="비밀번호"
-          autocomplete="${signup?"new-password":"current-password"}">
-
-        <button class="main" id="authButton">
-          ${signup?"회원가입":"로그인"}
-        </button>
-
-        <div id="authError"
-          style="color:#e33;text-align:center;margin-top:10px"></div>
-
-        <div class="switch" id="authSwitch">
-          ${signup
-            ?"이미 계정이 있다면 로그인"
-            :"계정이 없다면 회원가입"}
-        </div>
-      </div>
-    </div>
-  `;
-
-  $("#authButton").onclick = async()=>{
-
-    const username=$("#authUser").value.trim();
-    const password=$("#authPass").value;
-
-    if(!username || !password){
-      $("#authError").textContent="아이디와 비밀번호를 입력하세요.";
-      return;
-    }
-
-    try{
-
-      const data=await api(
-        signup?"/api/signup":"/api/login",
-        {
-          method:"POST",
-          body:JSON.stringify({
-            username,
-            password
-          })
-        }
-      );
-
-      state.user=data.user;
-      home();
-
-    }catch(e){
-      $("#authError").textContent=e.message;
-    }
-  };
-
-  $("#authSwitch").onclick=()=>loginPage(!signup);
-}
-
-/* ---------------------------------------------------------
+/* =========================================================
    HOME
-   --------------------------------------------------------- */
+   ========================================================= */
 
 function home(){
 
-  state.page="home";
+ state.page="home";
 
-  $("#app").innerHTML=`
-    <div class="top">
-      <div class="logo">🎮 Codescript</div>
-      <button id="homeCreate">만들기</button>
-      <button id="homeExplore">탐색</button>
+ document.body.innerHTML=
+ style()+
+ `
+ <div class="top">
 
-      <div class="userbox">
-        <span>👤 ${esc(state.user?.username || "")}</span>
-        <button id="logout">로그아웃</button>
-      </div>
-    </div>
+  <div class="logo">🎮 Codescript</div>
 
-    <div class="home">
-      <div class="homebox">
-        <h1>Codescript</h1>
-        <p>블록으로 만드는 나만의 게임</p>
+  <div class="spacer"></div>
 
-        <div class="homebuttons">
-          <button id="startOffline">오프라인 만들기</button>
-          <button id="startOnline">온라인 만들기</button>
-        </div>
-      </div>
-    </div>
-  `;
+  <button id="authButton">
+   ${state.user?"👤 "+escapeHTML(state.user):"로그인 / 회원가입"}
+  </button>
 
-  $("#homeCreate").onclick=()=>editor("offline");
-  $("#homeExplore").onclick=explore;
-  $("#startOffline").onclick=()=>editor("offline");
-  $("#startOnline").onclick=()=>editor("online");
+ </div>
 
-  $("#logout").onclick=async()=>{
-    await api("/api/logout",{method:"POST"}).catch(()=>{});
-    state.user=null;
-    loginPage(false);
-  };
+ <div class="hero">
+
+  <h1>🎮 Codescript</h1>
+
+  <p>
+   엔트리 느낌의 블록 코딩 플랫폼
+  </p>
+
+  <button id="newProject">
+   새 프로젝트 만들기
+  </button>
+
+  <button id="exploreButton">
+   탐색
+  </button>
+
+ </div>
+ `;
+
+ $("#authButton").onclick=auth;
+
+ $("#newProject").onclick=chooseMode;
+
+ $("#exploreButton").onclick=explore;
 }
 
-/* ---------------------------------------------------------
+/* =========================================================
+   MODE
+   ========================================================= */
+
+function chooseMode(){
+
+ document.body.innerHTML=
+ style()+
+ `
+ <div class="hero">
+
+  <h2>프로젝트 만들기</h2>
+
+  <p>실행 방식을 선택하세요.</p>
+
+  <button id="offline">
+   📴 오프라인
+  </button>
+
+  <button id="online">
+   🌐 온라인
+  </button>
+
+ </div>
+ `;
+
+ $("#offline").onclick=()=>{
+  state.mode="offline";
+  editor();
+ };
+
+ $("#online").onclick=()=>{
+  state.mode="online";
+  editor();
+ };
+}
+
+/* =========================================================
    EXPLORE
-   --------------------------------------------------------- */
+   ========================================================= */
 
 function explore(){
 
-  state.page="explore";
+ document.body.innerHTML=
+ style()+
+ `
+ <div class="top">
+  <div class="logo">탐색</div>
+  <div class="spacer"></div>
+  <button id="back">홈</button>
+ </div>
 
-  $("#app").innerHTML=`
-    <div class="top">
-      <div class="logo">🎮 Codescript</div>
-      <button id="backHome">홈</button>
-      <button id="newProject">새 프로젝트</button>
-      <div class="userbox">
-        👤 ${esc(state.user?.username||"")}
-      </div>
-    </div>
+ <div class="hero">
+  <h2>🌎 프로젝트 탐색</h2>
+  <p>공개 프로젝트 탐색 기능</p>
+  <p class="small">
+   프로젝트 서버가 연결되면 이 영역에서 공개 프로젝트를 표시합니다.
+  </p>
+ </div>
+ `;
 
-    <div style="padding:25px">
-      <h2>탐색</h2>
-      <p>로그인한 계정의 프로젝트를 불러옵니다.</p>
-      <div id="projects">불러오는 중...</div>
-    </div>
-  `;
-
-  $("#backHome").onclick=home;
-  $("#newProject").onclick=()=>editor("offline");
-
-  loadProjects();
+ $("#back").onclick=home;
 }
 
-async function loadProjects(){
-
-  const box=$("#projects");
-
-  try{
-    const data=await api("/api/projects");
-
-    if(!data.projects.length){
-      box.innerHTML="<p>아직 저장한 프로젝트가 없습니다.</p>";
-      return;
-    }
-
-    box.innerHTML=data.projects.map(p=>`
-      <div class="panel">
-        <b>${esc(p.name)}</b>
-        <div style="color:#777;font-size:13px">
-          ${new Date(p.updated_at).toLocaleString()}
-        </div>
-        <button class="smallbtn"
-          data-open="${p.id}">
-          열기
-        </button>
-      </div>
-    `).join("");
-
-    box.querySelectorAll("[data-open]").forEach(btn=>{
-      btn.onclick=()=>{
-        const p=data.projects.find(
-          x=>x.id===Number(btn.dataset.open)
-        );
-
-        if(!p)return;
-
-        try{
-          const project=JSON.parse(p.data);
-          loadProject(project);
-          state.project.id=p.id;
-          state.project.name=p.name;
-          editor("offline");
-        }catch{}
-      };
-    });
-
-  }catch(e){
-    box.innerHTML=`<p>${esc(e.message)}</p>`;
-  }
-}
-
-/* ---------------------------------------------------------
+/* =========================================================
    EDITOR
-   --------------------------------------------------------- */
+   ========================================================= */
 
-function editor(mode){
+function editor(){
 
-  state.page="editor";
-  state.project.mode=mode;
+ document.body.innerHTML=
+ style()+
+ `
+ <div class="top">
 
-  $("#app").innerHTML=`
-    <div class="top">
-      <div class="logo">🎮 Codescript</div>
+  <div class="logo">🎮 Codescript</div>
 
-      <button id="goHome">홈</button>
-      <button id="run">▶ 실행</button>
-      <button id="stop">■ 정지</button>
-      <button id="save">💾 저장</button>
-      <button id="paintOpen">🎨 그림판</button>
+  <button id="homeButton">홈</button>
 
-      <div class="userbox">
-        👤 ${esc(state.user?.username||"")}
-      </div>
+  <button id="runButton">▶ 실행</button>
+  <button id="stopButton">■ 정지</button>
+
+  <button id="saveButton">💾 저장</button>
+
+  <button id="paintButton">🎨 그림판</button>
+  <button id="soundButton">🔊 소리</button>
+
+  <div class="spacer"></div>
+
+  <b>
+   ${state.mode==="online"?"🌐 온라인":"📴 오프라인"}
+  </b>
+
+ </div>
+
+ <div class="editor">
+
+  <div class="categories" id="categories"></div>
+
+  <div class="main">
+
+   <div class="toolbar">
+
+    <input
+     id="projectName"
+     value="${escapeHTML(state.projectName)}"
+     placeholder="프로젝트 이름"
+    >
+
+    <button id="clearCode">
+     코드 비우기
+    </button>
+
+   </div>
+
+   <div
+    class="blocks"
+    id="blocks"
+   ></div>
+
+   <div
+    class="code"
+    id="code"
+   ></div>
+
+  </div>
+
+  <div class="side">
+
+   <div class="stage" id="stage"></div>
+
+   <div class="panel">
+
+    <div class="panel-title">
+     👤 오브젝트 목록
     </div>
 
-    <div class="layout">
+    <div id="objects"></div>
 
-      <div class="sidebar">
-        ${CATS.map(c=>`
-          <div class="cat"
-            data-cat="${c[0]}"
-            style="border-left:5px solid ${c[2]}">
-            ${c[1]}
-          </div>
-        `).join("")}
-      </div>
+    <button id="addObject">
+     ＋ 오브젝트 추가
+    </button>
 
-      <div class="blocks" id="blocks"></div>
+    <button id="deleteObject">
+     삭제
+    </button>
 
-      <div class="workspace">
+   </div>
 
-        <div class="stage" id="stage"></div>
+   <div class="panel">
 
-        <div class="codearea">
-          <h3>코드</h3>
-          <div id="code"></div>
-        </div>
-
-      </div>
-
-      <div class="right">
-
-        <div class="panel">
-          <h3>🧍 오브젝트 목록</h3>
-
-          <div id="objects"></div>
-
-          <button class="smallbtn" id="addObject">
-            ＋ 오브젝트 추가
-          </button>
-        </div>
-
-        <div class="panel">
-          <h3>🔊 소리</h3>
-
-          <input
-            class="fileinput"
-            id="soundFile"
-            type="file"
-            accept="audio/mpeg,audio/wav,audio/ogg,audio/*">
-
-          <button class="smallbtn" id="uploadSound">
-            🔊 소리 업로드
-          </button>
-
-          <button class="smallbtn" id="recordSound">
-            🎙️ 녹음
-          </button>
-
-          <div id="sounds"></div>
-        </div>
-
-        <div class="panel">
-          <h3>📊 오브젝트 속성</h3>
-          <div id="props"></div>
-        </div>
-
-      </div>
+    <div class="panel-title">
+     📦 변수
     </div>
 
-    <div class="modal" id="paintModal">
-      <div class="dialog">
-
-        <div class="dialoghead">
-          <b>🎨 그림판</b>
-          <span style="margin-left:auto"></span>
-          <button class="smallbtn" id="closePaint">닫기</button>
-        </div>
-
-        <div class="dialogbody">
-
-          <div class="paintbar">
-
-            <button data-tool="pen">✏️ 펜</button>
-            <button data-tool="eraser">🧹 지우개</button>
-            <button data-tool="line">╱ 선</button>
-            <button data-tool="rect">□ 사각형</button>
-            <button data-tool="circle">○ 원</button>
-            <button data-tool="fill">🪣 채우기</button>
-            <button data-tool="picker">💧 스포이드</button>
-
-            <label>
-              색
-              <input id="paintColor" type="color" value="#111111">
-            </label>
-
-            <label>
-              굵기
-              <input id="paintWidth"
-                class="range"
-                type="range"
-                min="1"
-                max="80"
-                value="8">
-            </label>
-
-            <label>
-              투명도
-              <input id="paintAlpha"
-                class="range"
-                type="range"
-                min="1"
-                max="100"
-                value="100">
-            </label>
-
-            <button id="paintUndo">↩ 실행취소</button>
-            <button id="paintRedo">↪ 다시실행</button>
-            <button id="paintClear">🗑 전체삭제</button>
-            <button id="paintExport">PNG 저장</button>
-            <button id="paintImageUpload">🖼 이미지 추가</button>
-
-            <input
-              class="fileinput"
-              id="imageFile"
-              type="file"
-              accept="image/*">
-
-            <button id="addLayer">＋ 레이어</button>
-            <button id="removeLayer">－ 레이어</button>
-
-          </div>
-
-          <div class="paintbar">
-
-            <button id="bitmapMode">Bitmap</button>
-            <button id="vectorMode">Vector</button>
-            <button id="pixelMode">Pixelmap</button>
-
-            <span style="margin-left:10px">
-              레이어:
-            </span>
-
-            <div id="layers"></div>
-
-          </div>
-
-          <div class="paintcanvaswrap">
-            <canvas
-              id="paintCanvas"
-              width="800"
-              height="500">
-            </canvas>
-          </div>
-
-        </div>
-      </div>
+    <div id="variables">
+     없음
     </div>
-  `;
 
-  bindEditor();
-  renderBlocks();
+   </div>
+
+   <div class="panel">
+
+    <div class="panel-title">
+     🔊 소리
+    </div>
+
+    <div id="soundList">
+     없음
+    </div>
+
+   </div>
+
+  </div>
+
+ </div>
+ `;
+
+ $("#homeButton").onclick=home;
+ $("#runButton").onclick=run;
+ $("#stopButton").onclick=()=>{
+  state.stop=true;
+ };
+ $("#saveButton").onclick=saveProject;
+ $("#paintButton").onclick=openPaint;
+ $("#soundButton").onclick=openSounds;
+
+ $("#clearCode").onclick=()=>{
+  state.code=[];
   renderCode();
-  renderObjects();
-  renderSounds();
-  renderProps();
-  initPaint();
-  renderStage();
+ };
 
-  if(mode==="online"){
-    connectWS();
-  }
+ $("#projectName").onchange=e=>{
+  state.projectName=e.target.value;
+ };
+
+ $("#addObject").onclick=addObject;
+ $("#deleteObject").onclick=deleteObject;
+
+ renderCategories();
+ renderBlocks();
+ renderCode();
+ renderObjects();
+ renderStage();
+ renderVariables();
+ renderSoundList();
 }
 
-/* ---------------------------------------------------------
-   BLOCK UI
-   --------------------------------------------------------- */
+/* =========================================================
+   CATEGORIES
+   ========================================================= */
+
+function renderCategories(){
+
+ const el=$("#categories");
+
+ el.innerHTML=
+ `<button class="category" data-cat="all">
+  전체
+ </button>`+
+ cats().map(c=>
+  `<button
+    class="category"
+    data-cat="${c}"
+   >
+    ${CAT_NAMES[c]}
+   </button>`
+ ).join("");
+
+ $$(".category").forEach(b=>{
+  b.onclick=()=>{
+   state.category=b.dataset.cat;
+   renderBlocks();
+  };
+ });
+}
+
+function cats(){
+ return Object.keys(COLORS);
+}
+
+/* =========================================================
+   BLOCK LIST
+   ========================================================= */
 
 function renderBlocks(){
 
-  const box=$("#blocks");
+ const el=$("#blocks");
 
-  const list=state.category==="all"
-    ? BLOCKS
-    : BLOCKS.filter(b=>b.cat===state.category);
+ const list=blocks.filter(b=>
+  state.category==="all"||
+  b.cat===state.category
+ );
 
-  box.innerHTML=list.map(b=>`
-    <div class="block"
-      draggable="true"
-      data-id="${b.id}"
-      style="background:${b.color}">
-      ${esc(b.name)}
-    </div>
-  `).join("");
+ el.innerHTML=list.map(b=>
+  `<div
+    class="block"
+    style="background:${COLORS[b.cat]}"
+    data-id="${b.id}"
+   >
+    ${escapeHTML(b.name)}
+  </div>`
+ ).join("");
 
-  box.querySelectorAll(".block").forEach(el=>{
-    el.onclick=()=>{
-      const b=BLOCKS.find(
-        x=>x.id===el.dataset.id
-      );
-
-      if(!b)return;
-
-      state.code.push({
-        ...b,
-        uid:crypto.randomUUID()
-      });
-
-      renderCode();
-    };
-
-    el.ondragstart=e=>{
-      e.dataTransfer.setData(
-        "text/plain",
-        el.dataset.id
-      );
-    };
-  });
+ $$("#blocks .block").forEach(b=>{
+  b.onclick=()=>{
+   state.code.push(Number(b.dataset.id));
+   renderCode();
+  };
+ });
 }
+
+/* =========================================================
+   CODE
+   ========================================================= */
 
 function renderCode(){
 
-  const box=$("#code");
+ const el=$("#code");
 
-  if(!state.code.length){
-    box.innerHTML=
-      `<p style="color:#999">
-        왼쪽 블록을 클릭해서 코드를 추가하세요.
-      </p>`;
-    return;
-  }
+ if(!state.code.length){
+  el.innerHTML=
+   `<span class="small">
+    블록을 클릭해서 코드를 추가하세요.
+   </span>`;
+  return;
+ }
 
-  box.innerHTML=state.code.map((b,i)=>`
-    <div
-      class="codeblock"
-      style="background:${b.color}">
-      <span>${esc(b.name)}</span>
-      <small data-del="${i}">✕</small>
-    </div>
-  `).join("");
+ el.innerHTML=state.code.map((id,index)=>{
+  const b=blocks[id];
 
-  box.querySelectorAll("[data-del]").forEach(x=>{
-    x.onclick=()=>{
-      state.code.splice(
-        Number(x.dataset.del),
-        1
-      );
-      renderCode();
-    };
-  });
+  return `
+   <span
+    class="block"
+    style="background:${COLORS[b.cat]}"
+    data-index="${index}"
+   >
+    ${escapeHTML(b.name)}
+   </span>
+  `;
+ }).join("");
+
+ $$("#code .block").forEach(b=>{
+  b.onclick=()=>{
+   state.code.splice(
+    Number(b.dataset.index),
+    1
+   );
+   renderCode();
+  };
+ });
 }
 
-/* ---------------------------------------------------------
+/* =========================================================
    OBJECTS
-   --------------------------------------------------------- */
-
-function renderObjects(){
-
-  const box=$("#objects");
-
-  box.innerHTML=state.objects.map(o=>`
-    <div class="objrow ${
-      o.id===state.selectedObject?"active":""
-    }" data-object="${o.id}">
-
-      <span>🧍</span>
-      <span class="objname">${esc(o.name)}</span>
-
-      <button class="smallbtn"
-        data-dup="${o.id}">
-        ⧉
-      </button>
-
-      <button class="smallbtn"
-        data-delobj="${o.id}">
-        ×
-      </button>
-    </div>
-  `).join("");
-
-  box.querySelectorAll("[data-object]").forEach(row=>{
-    row.onclick=e=>{
-      if(
-        e.target.closest("[data-dup]") ||
-        e.target.closest("[data-delobj]")
-      )return;
-
-      state.selectedObject=row.dataset.object;
-
-      renderObjects();
-      renderProps();
-      renderStage();
-    };
-  });
-
-  box.querySelectorAll("[data-dup]").forEach(btn=>{
-    btn.onclick=()=>{
-      const o=state.objects.find(
-        x=>x.id===btn.dataset.dup
-      );
-
-      if(!o)return;
-
-      const copy={
-        ...structuredClone(o),
-        id:crypto.randomUUID(),
-        name:o.name+" 복사본",
-        x:o.x+20,
-        y:o.y+20
-      };
-
-      state.objects.push(copy);
-      state.selectedObject=copy.id;
-
-      renderObjects();
-      renderStage();
-    };
-  });
-
-  box.querySelectorAll("[data-delobj]").forEach(btn=>{
-    btn.onclick=()=>{
-      if(state.objects.length<=1){
-        alert("오브젝트는 최소 1개가 필요합니다.");
-        return;
-      }
-
-      state.objects=state.objects.filter(
-        o=>o.id!==btn.dataset.delobj
-      );
-
-      state.selectedObject=state.objects[0].id;
-
-      renderObjects();
-      renderProps();
-      renderStage();
-    };
-  });
-}
+   ========================================================= */
 
 function addObject(){
 
-  const n=state.objects.length+1;
+ const n=state.objects.length+1;
 
-  const o={
-    id:crypto.randomUUID(),
-    name:"오브젝트 "+n,
-    x:320,
-    y:200,
-    size:100,
-    direction:90,
-    visible:true,
-    costume:null,
-    sound:null
-  };
+ state.objects.push({
+  name:"오브젝트"+n,
+  emoji:"🐟",
+  x:100+n*25,
+  y:120+n*15,
+  size:100,
+  visible:true
+ });
 
-  state.objects.push(o);
-  state.selectedObject=o.id;
+ state.selectedObject=
+  state.objects.length-1;
 
-  renderObjects();
-  renderProps();
-  renderStage();
+ renderObjects();
+ renderStage();
 }
 
-function renderProps(){
+function deleteObject(){
 
-  const o=selectedObject();
+ if(state.objects.length<=1){
+  alert("오브젝트는 최소 1개가 필요합니다.");
+  return;
+ }
 
-  if(!o)return;
+ state.objects.splice(
+  state.selectedObject,
+  1
+ );
 
-  $("#props").innerHTML=`
-    <label>이름</label>
-    <input id="objName"
-      value="${esc(o.name)}"
-      style="width:100%;padding:7px">
+ state.selectedObject=
+  Math.max(0,state.selectedObject-1);
 
-    <label>X</label>
-    <input id="objX"
-      type="number"
-      value="${o.x}"
-      style="width:100%;padding:7px">
-
-    <label>Y</label>
-    <input id="objY"
-      type="number"
-      value="${o.y}"
-      style="width:100%;padding:7px">
-
-    <label>크기</label>
-    <input id="objSize"
-      type="number"
-      value="${o.size}"
-      style="width:100%;padding:7px">
-
-    <label>방향</label>
-    <input id="objDir"
-      type="number"
-      value="${o.direction}"
-      style="width:100%;padding:7px">
-
-    <label>
-      <input id="objVisible"
-        type="checkbox"
-        ${o.visible?"checked":""}>
-      보이기
-    </label>
-
-    <br>
-
-    <button class="smallbtn" id="renameObj">
-      이름 적용
-    </button>
-  `;
-
-  $("#renameObj").onclick=()=>{
-    o.name=$("#objName").value||"오브젝트";
-    updateObject();
-  };
-
-  ["objX","objY","objSize","objDir"].forEach(id=>{
-    $("#"+id).oninput=()=>{
-      o.x=Number($("#objX").value);
-      o.y=Number($("#objY").value);
-      o.size=Number($("#objSize").value);
-      o.direction=Number($("#objDir").value);
-      renderStage();
-    };
-  });
-
-  $("#objVisible").onchange=()=>{
-    o.visible=$("#objVisible").checked;
-    renderStage();
-  };
+ renderObjects();
+ renderStage();
 }
 
-function updateObject(){
-  renderObjects();
-  renderProps();
-  renderStage();
+function renderObjects(){
+
+ const el=$("#objects");
+
+ el.innerHTML=state.objects.map((o,i)=>
+  `<div
+   class="object ${i===state.selectedObject?"selected":""}"
+   data-i="${i}"
+  >
+   ${escapeHTML(o.emoji)}
+   ${escapeHTML(o.name)}
+  </div>`
+ ).join("");
+
+ $$(".object").forEach(x=>{
+  x.onclick=()=>{
+   state.selectedObject=
+    Number(x.dataset.i);
+
+   renderObjects();
+   renderStage();
+  };
+ });
 }
 
-/* ---------------------------------------------------------
+/* =========================================================
    STAGE
-   --------------------------------------------------------- */
+   ========================================================= */
 
 function renderStage(){
 
-  const stage=$("#stage");
+ const stage=$("#stage");
 
-  if(!stage)return;
+ if(!stage)return;
 
-  stage.innerHTML="";
-
-  for(const o of state.objects){
-
-    if(!o.visible)continue;
-
-    const el=document.createElement("div");
-
-    el.className=
-      "object"+
-      (o.id===state.selectedObject
-        ?" selected":"");
-
-    el.dataset.id=o.id;
-
-    el.style.left=(o.x-25)+"px";
-    el.style.top=(o.y-25)+"px";
-
-    el.style.width=(50*o.size/100)+"px";
-    el.style.height=(50*o.size/100)+"px";
-
-    el.style.transform=
-      `rotate(${o.direction-90}deg)`;
-
-    if(o.costume){
-      el.style.backgroundImage=
-        `url("${o.costume}")`;
-
-      el.style.backgroundSize="cover";
-      el.textContent="";
-    }else{
-      el.textContent="🎮";
-    }
-
-    el.onclick=e=>{
-      e.stopPropagation();
-
-      state.selectedObject=o.id;
-
-      renderObjects();
-      renderProps();
-      renderStage();
-    };
-
-    stage.appendChild(el);
-  }
+ stage.innerHTML=
+ state.objects.map((o,i)=>
+ `
+ <div
+  class="sprite"
+  style="
+   left:${o.x}px;
+   top:${o.y}px;
+   display:${o.visible?"block":"none"};
+   font-size:${42*o.size/100}px;
+  "
+ >
+  ${escapeHTML(o.emoji)}
+ </div>
+ `
+ ).join("");
 }
 
-/* ---------------------------------------------------------
-   SOUND
-   --------------------------------------------------------- */
+/* =========================================================
+   VARIABLES
+   ========================================================= */
 
-function renderSounds(){
+function renderVariables(){
 
-  const box=$("#sounds");
+ const el=$("#variables");
 
-  if(!state.sounds.length){
-    box.innerHTML=
-      `<p style="color:#999">소리가 없습니다.</p>`;
-    return;
-  }
+ const names=Object.keys(state.variables);
 
-  box.innerHTML=state.sounds.map((s,i)=>`
-    <div class="soundrow">
+ if(!names.length){
+  el.textContent="없음";
+  return;
+ }
 
-      🔊
-
-      <span class="objname">
-        ${esc(s.name)}
-      </span>
-
-      <button class="smallbtn"
-        data-play="${i}">
-        ▶
-      </button>
-
-      <button class="smallbtn"
-        data-stop="${i}">
-        ■
-      </button>
-
-      <button class="smallbtn"
-        data-del-sound="${i}">
-        ×
-      </button>
-
-    </div>
-  `).join("");
-
-  box.querySelectorAll("[data-play]").forEach(btn=>{
-    btn.onclick=()=>{
-      const s=state.sounds[Number(btn.dataset.play)];
-
-      if(s.audio){
-        s.audio.currentTime=0;
-        s.audio.play().catch(()=>{});
-      }
-    };
-  });
-
-  box.querySelectorAll("[data-stop]").forEach(btn=>{
-    btn.onclick=()=>{
-      const s=state.sounds[Number(btn.dataset.stop)];
-
-      if(s.audio){
-        s.audio.pause();
-        s.audio.currentTime=0;
-      }
-    };
-  });
-
-  box.querySelectorAll("[data-del-sound]").forEach(btn=>{
-    btn.onclick=()=>{
-      const i=Number(btn.dataset.delSound);
-
-      const s=state.sounds[i];
-
-      if(s.audio){
-        s.audio.pause();
-      }
-
-      if(s.url){
-        URL.revokeObjectURL(s.url);
-      }
-
-      state.sounds.splice(i,1);
-      renderSounds();
-    };
-  });
+ el.innerHTML=
+ names.map(n=>
+  `<div>${escapeHTML(n)} : ${state.variables[n]}</div>`
+ ).join("");
 }
 
-function uploadSound(file){
-
-  if(!file)return;
-
-  const allowed=[
-    "audio/mpeg",
-    "audio/wav",
-    "audio/ogg",
-    "audio/mp4",
-    "audio/webm"
-  ];
-
-  if(
-    !allowed.includes(file.type) &&
-    !/\.(mp3|wav|ogg|m4a|webm)$/i.test(file.name)
-  ){
-    alert("MP3, WAV, OGG 등의 오디오 파일만 사용할 수 있습니다.");
-    return;
-  }
-
-  const url=URL.createObjectURL(file);
-
-  const audio=new Audio(url);
-
-  state.sounds.push({
-    id:crypto.randomUUID(),
-    name:file.name.replace(/\.[^.]+$/,""),
-    type:file.type,
-    size:file.size,
-    url,
-    audio,
-    blob:file
-  });
-
-  renderSounds();
-}
-
-async function recordSound(){
-
-  if(state.audio.recording){
-    state.audio.recorder.stop();
-    return;
-  }
-
-  if(!navigator.mediaDevices?.getUserMedia){
-    alert("이 브라우저에서는 마이크 녹음을 사용할 수 없습니다.");
-    return;
-  }
-
-  try{
-
-    const stream=
-      await navigator.mediaDevices.getUserMedia({
-        audio:true
-      });
-
-    const recorder=
-      new MediaRecorder(stream);
-
-    state.audio.recorder=recorder;
-    state.audio.chunks=[];
-    state.audio.recording=true;
-
-    $("#recordSound").textContent="⏹ 녹음 중지";
-
-    recorder.ondataavailable=e=>{
-      if(e.data.size){
-        state.audio.chunks.push(e.data);
-      }
-    };
-
-    recorder.onstop=()=>{
-
-      const blob=new Blob(
-        state.audio.chunks,
-        {
-          type:recorder.mimeType ||
-            "audio/webm"
-        }
-      );
-
-      const url=URL.createObjectURL(blob);
-      const audio=new Audio(url);
-
-      state.sounds.push({
-        id:crypto.randomUUID(),
-        name:"녹음 "+new Date().toLocaleTimeString(),
-        type:blob.type,
-        size:blob.size,
-        url,
-        audio,
-        blob
-      });
-
-      state.audio.recording=false;
-
-      stream.getTracks().forEach(
-        t=>t.stop()
-      );
-
-      $("#recordSound").textContent="🎙️ 녹음";
-
-      renderSounds();
-    };
-
-    recorder.start();
-
-  }catch(e){
-    alert("마이크 사용 권한이 필요합니다.");
-  }
-}
-
-/* ---------------------------------------------------------
-   PAINT
-   --------------------------------------------------------- */
-
-function initPaint(){
-
-  const canvas=$("#paintCanvas");
-
-  if(!canvas)return;
-
-  state.paint.canvas=canvas;
-  state.paint.ctx=canvas.getContext("2d",{
-    willReadFrequently:true
-  });
-
-  state.paint.ctx.fillStyle="white";
-  state.paint.ctx.fillRect(
-    0,0,canvas.width,canvas.height
-  );
-
-  state.paint.layers[0].canvas=canvas;
-
-  bindPaint();
-
-  renderLayers();
-}
-
-function savePaintHistory(){
-
-  const c=state.paint.canvas;
-
-  state.paint.history.push(
-    c.toDataURL()
-  );
-
-  if(state.paint.history.length>30){
-    state.paint.history.shift();
-  }
-
-  state.paint.future=[];
-}
-
-function restorePaint(url){
-
-  const img=new Image();
-
-  img.onload=()=>{
-    const ctx=state.paint.ctx;
-
-    ctx.clearRect(
-      0,0,
-      state.paint.canvas.width,
-      state.paint.canvas.height
-    );
-
-    ctx.drawImage(img,0,0);
-  };
-
-  img.src=url;
-}
-
-function bindPaint(){
-
-  const c=state.paint.canvas;
-
-  const pos=e=>{
-    const r=c.getBoundingClientRect();
-
-    return {
-      x:(e.clientX-r.left)*
-        c.width/r.width,
-
-      y:(e.clientY-r.top)*
-        c.height/r.height
-    };
-  };
-
-  c.onpointerdown=e=>{
-
-    const p=pos(e);
-
-    state.paint.drawing=true;
-
-    state.paint.lastX=p.x;
-    state.paint.lastY=p.y;
-
-    state.paint.startX=p.x;
-    state.paint.startY=p.y;
-
-    savePaintHistory();
-
-    if(state.paint.tool==="fill"){
-      floodFill(
-        Math.floor(p.x),
-        Math.floor(p.y)
-      );
-
-      state.paint.drawing=false;
-      return;
-    }
-
-    if(state.paint.tool==="picker"){
-      const data=state.paint.ctx.getImageData(
-        Math.floor(p.x),
-        Math.floor(p.y),
-        1,1
-      ).data;
-
-      const hex="#"+
-        [data[0],data[1],data[2]]
-          .map(x=>x.toString(16).padStart(2,"0"))
-          .join("");
-
-      state.paint.color=hex;
-      $("#paintColor").value=hex;
-
-      state.paint.drawing=false;
-      return;
-    }
-
-    c.setPointerCapture(e.pointerId);
-  };
-
-  c.onpointermove=e=>{
-
-    if(!state.paint.drawing)return;
-
-    const p=pos(e);
-
-    const ctx=state.paint.ctx;
-
-    if(
-      state.paint.tool==="pen" ||
-      state.paint.tool==="eraser"
-    ){
-
-      ctx.save();
-
-      ctx.globalAlpha=
-        state.paint.alpha/100;
-
-      ctx.lineCap="round";
-      ctx.lineJoin="round";
-      ctx.lineWidth=state.paint.width;
-
-      ctx.strokeStyle=
-        state.paint.tool==="eraser"
-          ? "rgba(0,0,0,1)"
-          : state.paint.color;
-
-      if(state.paint.tool==="eraser"){
-        ctx.globalCompositeOperation=
-          "destination-out";
-      }else{
-        ctx.globalCompositeOperation=
-          "source-over";
-      }
-
-      ctx.beginPath();
-
-      ctx.moveTo(
-        state.paint.lastX,
-        state.paint.lastY
-      );
-
-      ctx.lineTo(p.x,p.y);
-
-      ctx.stroke();
-      ctx.restore();
-
-      state.paint.lastX=p.x;
-      state.paint.lastY=p.y;
-    }
-  };
-
-  c.onpointerup=e=>{
-
-    if(!state.paint.drawing)return;
-
-    const p=pos(e);
-    const ctx=state.paint.ctx;
-
-    if(state.paint.tool==="line"){
-      drawLine(
-        state.paint.startX,
-        state.paint.startY,
-        p.x,p.y
-      );
-    }
-
-    if(state.paint.tool==="rect"){
-      ctx.save();
-
-      ctx.globalAlpha=
-        state.paint.alpha/100;
-
-      ctx.strokeStyle=state.paint.color;
-      ctx.lineWidth=state.paint.width;
-
-      ctx.strokeRect(
-        state.paint.startX,
-        state.paint.startY,
-        p.x-state.paint.startX,
-        p.y-state.paint.startY
-      );
-
-      ctx.restore();
-    }
-
-    if(state.paint.tool==="circle"){
-
-      const dx=
-        p.x-state.paint.startX;
-
-      const dy=
-        p.y-state.paint.startY;
-
-      const radius=
-        Math.sqrt(dx*dx+dy*dy);
-
-      ctx.save();
-
-      ctx.globalAlpha=
-        state.paint.alpha/100;
-
-      ctx.strokeStyle=state.paint.color;
-      ctx.lineWidth=state.paint.width;
-
-      ctx.beginPath();
-
-      ctx.arc(
-        state.paint.startX,
-        state.paint.startY,
-        radius,
-        0,
-        Math.PI*2
-      );
-
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    state.paint.drawing=false;
-  };
-
-  c.onpointercancel=()=>{
-    state.paint.drawing=false;
-  };
-
-  document.querySelectorAll("[data-tool]").forEach(btn=>{
-    btn.onclick=()=>{
-      state.paint.tool=btn.dataset.tool;
-    };
-  });
-
-  $("#paintColor").oninput=e=>{
-    state.paint.color=e.target.value;
-  };
-
-  $("#paintWidth").oninput=e=>{
-    state.paint.width=Number(e.target.value);
-  };
-
-  $("#paintAlpha").oninput=e=>{
-    state.paint.alpha=Number(e.target.value);
-  };
-
-  $("#paintUndo").onclick=paintUndo;
-  $("#paintRedo").onclick=paintRedo;
-
-  $("#paintClear").onclick=()=>{
-    savePaintHistory();
-
-    state.paint.ctx.clearRect(
-      0,0,c.width,c.height
-    );
-  };
-
-  $("#paintExport").onclick=exportPaint;
-
-  $("#paintImageUpload").onclick=()=>{
-    $("#imageFile").click();
-  };
-
-  $("#imageFile").onchange=e=>{
-    addImageToPaint(e.target.files[0]);
-    e.target.value="";
-  };
-
-  $("#bitmapMode").onclick=()=>{
-    state.paint.mode="bitmap";
-  };
-
-  $("#vectorMode").onclick=()=>{
-    state.paint.mode="vector";
-  };
-
-  $("#pixelMode").onclick=()=>{
-    state.paint.mode="pixelmap";
-  };
-
-  $("#addLayer").onclick=addLayer;
-  $("#removeLayer").onclick=removeLayer;
-}
-
-function drawLine(x1,y1,x2,y2){
-
-  const ctx=state.paint.ctx;
-
-  ctx.save();
-
-  ctx.globalAlpha=
-    state.paint.alpha/100;
-
-  ctx.strokeStyle=state.paint.color;
-  ctx.lineWidth=state.paint.width;
-  ctx.lineCap="round";
-
-  ctx.beginPath();
-  ctx.moveTo(x1,y1);
-  ctx.lineTo(x2,y2);
-  ctx.stroke();
-
-  ctx.restore();
-}
-
-function floodFill(x,y){
-
-  const c=state.paint.canvas;
-  const ctx=state.paint.ctx;
-
-  const img=ctx.getImageData(
-    0,0,c.width,c.height
-  );
-
-  const data=img.data;
-
-  const index=(y*c.width+x)*4;
-
-  const target=[
-    data[index],
-    data[index+1],
-    data[index+2],
-    data[index+3]
-  ];
-
-  const color=hexToRgb(state.paint.color);
-
-  const replacement=[
-    color.r,
-    color.g,
-    color.b,
-    Math.round(255*state.paint.alpha/100)
-  ];
-
-  if(
-    target.every((v,i)=>v===replacement[i])
-  )return;
-
-  const stack=[[x,y]];
-
-  while(stack.length){
-
-    const [cx,cy]=stack.pop();
-
-    if(
-      cx<0 ||
-      cy<0 ||
-      cx>=c.width ||
-      cy>=c.height
-    )continue;
-
-    const i=(cy*c.width+cx)*4;
-
-    if(
-      data[i]!==target[0] ||
-      data[i+1]!==target[1] ||
-      data[i+2]!==target[2] ||
-      data[i+3]!==target[3]
-    )continue;
-
-    data[i]=replacement[0];
-    data[i+1]=replacement[1];
-    data[i+2]=replacement[2];
-    data[i+3]=replacement[3];
-
-    stack.push([cx+1,cy]);
-    stack.push([cx-1,cy]);
-    stack.push([cx,cy+1]);
-    stack.push([cx,cy-1]);
-  }
-
-  ctx.putImageData(img,0,0);
-}
-
-function hexToRgb(hex){
-
-  const n=parseInt(
-    hex.replace("#",""),
-    16
-  );
-
-  return {
-    r:(n>>16)&255,
-    g:(n>>8)&255,
-    b:n&255
-  };
-}
-
-function paintUndo(){
-
-  const h=state.paint.history;
-
-  if(!h.length)return;
-
-  const current=
-    state.paint.canvas.toDataURL();
-
-  state.paint.future.push(current);
-
-  const previous=h.pop();
-
-  restorePaint(previous);
-}
-
-function paintRedo(){
-
-  const f=state.paint.future;
-
-  if(!f.length)return;
-
-  const current=
-    state.paint.canvas.toDataURL();
-
-  state.paint.history.push(current);
-
-  const next=f.pop();
-
-  restorePaint(next);
-}
-
-function exportPaint(){
-
-  state.paint.canvas.toBlob(blob=>{
-    if(!blob)return;
-
-    const url=URL.createObjectURL(blob);
-
-    const a=document.createElement("a");
-
-    a.href=url;
-    a.download=
-      (state.project.name||"codescript")+
-      ".png";
-
-    a.click();
-
-    setTimeout(
-      ()=>URL.revokeObjectURL(url),
-      1000
-    );
-  },"image/png");
-}
-
-function addImageToPaint(file){
-
-  if(!file)return;
-
-  if(!file.type.startsWith("image/")){
-    alert("이미지 파일만 사용할 수 있습니다.");
-    return;
-  }
-
-  const url=URL.createObjectURL(file);
-
-  const img=new Image();
-
-  img.onload=()=>{
-
-    savePaintHistory();
-
-    const c=state.paint.canvas;
-    const ctx=state.paint.ctx;
-
-    const scale=Math.min(
-      c.width/img.width,
-      c.height/img.height,
-      1
-    );
-
-    const w=img.width*scale;
-    const h=img.height*scale;
-
-    ctx.drawImage(
-      img,
-      (c.width-w)/2,
-      (c.height-h)/2,
-      w,h
-    );
-
-    URL.revokeObjectURL(url);
-  };
-
-  img.src=url;
-}
-
-/* ---------------------------------------------------------
-   LAYERS
-   --------------------------------------------------------- */
-
-function addLayer(){
-
-  const canvas=document.createElement("canvas");
-
-  canvas.width=800;
-  canvas.height=500;
-
-  const layer={
-    name:"레이어 "+(state.paint.layers.length+1),
-    visible:true,
-    opacity:1,
-    canvas
-  };
-
-  state.paint.layers.push(layer);
-
-  state.paint.activeLayer=
-    state.paint.layers.length-1;
-
-  renderLayers();
-}
-
-function removeLayer(){
-
-  if(state.paint.layers.length<=1)return;
-
-  state.paint.layers.splice(
-    state.paint.activeLayer,
-    1
-  );
-
-  state.paint.activeLayer=
-    Math.max(
-      0,
-      state.paint.activeLayer-1
-    );
-
-  renderLayers();
-}
-
-function renderLayers(){
-
-  const box=$("#layers");
-
-  if(!box)return;
-
-  box.innerHTML=state.paint.layers.map(
-    (l,i)=>`
-      <button
-        class="smallbtn ${
-          i===state.paint.activeLayer
-            ?"active":""
-        }"
-        data-layer="${i}">
-        ${esc(l.name)}
-      </button>
-    `
-  ).join("");
-
-  box.querySelectorAll("[data-layer]").forEach(btn=>{
-    btn.onclick=()=>{
-      state.paint.activeLayer=
-        Number(btn.dataset.layer);
-
-      renderLayers();
-    };
-  });
-}
-
-/* ---------------------------------------------------------
-   PROJECT SAVE
-   --------------------------------------------------------- */
-
-function serializeProject(){
-
-  return {
-    version:1,
-
-    name:state.project.name,
-
-    objects:state.objects,
-
-    code:state.code.map(b=>({
-      id:b.id,
-      name:b.name,
-      cat:b.cat,
-      action:b.action,
-      color:b.color
-    })),
-
-    vars:state.vars,
-    lists:state.lists,
-    funcs:state.funcs,
-
-    sounds:state.sounds.map(s=>({
-      id:s.id,
-      name:s.name,
-      type:s.type,
-      size:s.size
-    }))
-  };
-}
-
-function loadProject(p){
-
-  if(!p)return;
-
-  if(Array.isArray(p.objects))
-    state.objects=p.objects;
-
-  if(Array.isArray(p.code))
-    state.code=p.code;
-
-  state.vars=p.vars||{};
-  state.lists=p.lists||{};
-  state.funcs=p.funcs||{};
-
-  if(state.objects.length){
-    state.selectedObject=
-      state.objects[0].id;
-  }
-}
-
-/* ---------------------------------------------------------
-   SAVE
-   --------------------------------------------------------- */
-
-async function saveProject(){
-
-  const name=
-    prompt(
-      "프로젝트 이름",
-      state.project.name
-    );
-
-  if(name!==null && name.trim()){
-    state.project.name=name.trim();
-  }
-
-  try{
-
-    const data=await api(
-      "/api/projects",
-      {
-        method:"POST",
-        body:JSON.stringify({
-          id:state.project.id,
-          name:state.project.name,
-          project:serializeProject()
-        })
-      }
-    );
-
-    state.project.id=data.id;
-
-    alert("프로젝트가 저장되었습니다.");
-
-  }catch(e){
-    alert(e.message);
-  }
-}
-
-/* ---------------------------------------------------------
+/* =========================================================
    EXECUTION
-   --------------------------------------------------------- */
-
-async function executeBlock(b){
-
-  const a=b.action;
-  const o=selectedObject();
-
-  switch(a[0]){
-
-    case "start":
-      break;
-
-    case "wait":
-      await new Promise(
-        r=>setTimeout(
-          r,
-          Number(a[1])*1000
-        )
-      );
-      break;
-
-    case "move":
-      o.x += Number(a[1]);
-      break;
-
-    case "movex":
-      o.x += Number(a[1]);
-      break;
-
-    case "movey":
-      o.y += Number(a[1]);
-      break;
-
-    case "setx":
-      o.x=Number(a[1]);
-      break;
-
-    case "sety":
-      o.y=Number(a[1]);
-      break;
-
-    case "direction":
-      o.direction=Number(a[1]);
-      break;
-
-    case "turn":
-      o.direction+=Number(a[1]);
-      break;
-
-    case "center":
-      o.x=320;
-      o.y=200;
-      break;
-
-    case "size":
-      o.size=Number(a[1]);
-      break;
-
-    case "show":
-      o.visible=true;
-      break;
-
-    case "hide":
-      o.visible=false;
-      break;
-
-    case "say":
-      showBubble(o,a[1]);
-      break;
-
-    case "sayTime":
-      showBubble(o,"안녕");
-      await new Promise(
-        r=>setTimeout(r,Number(a[1])*1000)
-      );
-      clearBubble();
-      break;
-
-    case "think":
-      showBubble(o,"💭 "+a[1]);
-      break;
-
-    case "clearSay":
-    case "clearText":
-      clearBubble();
-      break;
-
-    case "penDown":
-      state.paint.penDown=true;
-      break;
-
-    case "penUp":
-      state.paint.penDown=false;
-      break;
-
-    case "penWidth":
-      state.paint.width=Number(a[1]);
-      break;
-
-    case "clearPaint":
-      if(state.paint.ctx){
-        state.paint.ctx.clearRect(
-          0,0,
-          state.paint.canvas.width,
-          state.paint.canvas.height
-        );
-      }
-      break;
-
-    case "stamp":
-      break;
-
-    case "sound":
-
-      if(state.sounds.length){
-        const s=state.sounds[0];
-
-        s.audio.currentTime=0;
-        s.audio.play().catch(()=>{});
-      }
-
-      break;
-
-    case "stopSound":
-
-      for(const s of state.sounds){
-        s.audio.pause();
-        s.audio.currentTime=0;
-      }
-
-      break;
-
-    case "newVar":
-
-      state.vars[a[1]]=0;
-      break;
-
-    case "setVar":
-
-      state.vars[a[1]]=Number(a[2])||0;
-      break;
-
-    case "changeVar":
-
-      state.vars[a[1]]=
-        (Number(state.vars[a[1]])||0)+
-        Number(a[2]||0);
-
-      break;
-
-    case "newList":
-
-      state.lists[a[1]]=[];
-      break;
-
-    case "pushList":
-
-      if(!state.lists[a[1]])
-        state.lists[a[1]]=[];
-
-      state.lists[a[1]].push(a[2]);
-      break;
-
-    case "clearList":
-
-      state.lists[a[1]]=[];
-      break;
-
-    case "add":
-      state.lastValue=
-        Number(a[1])+Number(a[2]);
-      break;
-
-    case "sub":
-      state.lastValue=
-        Number(a[1])-Number(a[2]);
-      break;
-
-    case "mul":
-      state.lastValue=
-        Number(a[1])*Number(a[2]);
-      break;
-
-    case "div":
-      state.lastValue=
-        Number(a[2])===0
-          ?0
-          :Number(a[1])/Number(a[2]);
-      break;
-
-    case "mod":
-      state.lastValue=
-        Number(a[1])%Number(a[2]);
-      break;
-
-    case "random":
-      state.lastValue=
-        Math.floor(
-          Math.random()*
-          (Number(a[2])-Number(a[1])+1)
-        )+
-        Number(a[1]);
-      break;
-
-    case "round":
-      state.lastValue=
-        Math.round(Number(a[1]));
-      break;
-
-    case "abs":
-      state.lastValue=
-        Math.abs(Number(a[1]));
-      break;
-
-    case "newFunc":
-      state.funcs[a[1]]=[];
-      break;
-
-    case "callFunc":
-      if(state.funcs[a[1]]){
-        for(const fb of state.funcs[a[1]]){
-          await executeBlock(fb);
-        }
-      }
-      break;
-
-    case "roomCreate":
-      connectWS();
-      break;
-
-    case "roomJoin":
-      connectWS();
-      break;
-
-    case "chat":
-      if(state.ws?.readyState===1){
-        state.ws.send(JSON.stringify({
-          type:"chat",
-          text:"안녕하세요",
-          user:state.user?.username
-        }));
-      }
-      break;
-
-    case "username":
-      state.lastText=
-        state.user?.username||"";
-      break;
-  }
-
-  renderStage();
-  renderProps();
-}
+   ========================================================= */
 
 async function run(){
 
-  if(state.running)return;
+ if(state.running)return;
 
-  state.running=true;
-  state.stop=false;
+ state.running=true;
+ state.stop=false;
 
-  try{
+ for(
+  let i=0;
+  i<state.code.length;
+  i++
+ ){
 
-    for(const b of state.code){
+  if(state.stop)break;
 
-      if(state.stop)break;
+  await executeBlock(
+   state.code[i]
+  );
+ }
 
-      await executeBlock(b);
-    }
+ state.running=false;
 
-  }finally{
-    state.running=false;
+ renderStage();
+ renderVariables();
+}
+
+async function executeBlock(id){
+
+ const b=blocks[id];
+
+ if(!b)return;
+
+ const op=b.op;
+ const a=b.args;
+
+ const obj=
+  state.objects[
+   Math.max(
+    0,
+    Math.min(
+     state.selectedObject,
+     state.objects.length-1
+    )
+   )
+  ];
+
+ if(op==="start"){
+  return;
+ }
+
+ if(op==="move"){
+  const rad=
+   obj.direction*
+   Math.PI/180;
+
+  obj.x+=
+   Math.cos(rad)*Number(a[0]);
+
+  obj.y+=
+   Math.sin(rad)*Number(a[0]);
+
+  clampObject(obj);
+
+  renderStage();
+  return;
+ }
+
+ if(op==="turn"){
+  obj.direction=
+   (obj.direction+Number(a[0]))%360;
+  return;
+ }
+
+ if(op==="direction"){
+  obj.direction=Number(a[0]);
+  return;
+ }
+
+ if(op==="show"){
+  obj.visible=true;
+  renderStage();
+  return;
+ }
+
+ if(op==="hide"){
+  obj.visible=false;
+  renderStage();
+  return;
+ }
+
+ if(op==="size"){
+  obj.size=Number(a[0]);
+  renderStage();
+  return;
+ }
+
+ if(op==="say"){
+  showSpeech(
+   obj,
+   a[0]||""
+  );
+  return;
+ }
+
+ if(op==="wait"){
+  await sleep(
+   Number(a[0])*1000
+  );
+  return;
+ }
+
+ if(op==="repeat"){
+  await sleep(20);
+  return;
+ }
+
+ if(op==="forever"){
+  return;
+ }
+
+ if(op==="nextObject"){
+  state.selectedObject=
+   (state.selectedObject+1)%
+   state.objects.length;
+
+  renderObjects();
+  renderStage();
+  return;
+ }
+
+ if(op==="selectObject"){
+  if(
+   state.objects[a[0]]
+  ){
+   state.selectedObject=a[0];
+   renderObjects();
+   renderStage();
   }
-}
+  return;
+ }
 
-function showBubble(o,text){
+ if(op==="sound"){
+  const s=state.sounds[a[0]];
+  if(s){
+   try{
+    s.audio.currentTime=0;
+    await s.audio.play();
+   }catch(e){}
+  }
+  return;
+ }
 
-  let bubble=document.querySelector(".bubble");
+ if(op==="stopSound"){
+  state.sounds.forEach(s=>{
+   try{
+    s.audio.pause();
+   }catch(e){}
+  });
+  return;
+ }
 
-  if(!bubble){
-    bubble=document.createElement("div");
-    bubble.className="bubble";
-    bubble.style.position="absolute";
-    bubble.style.background="white";
-    bubble.style.border="2px solid #222";
-    bubble.style.borderRadius="10px";
-    bubble.style.padding="8px";
-    bubble.style.zIndex="20";
-    $("#stage").appendChild(bubble);
+ if(op==="penWidth"){
+  state.paint.width=
+   Number(a[0]);
+  return;
+ }
+
+ if(op==="penColor"){
+  state.paint.color=
+   a[0];
+  return;
+ }
+
+ if(op==="varCreate"){
+  state.variables[a[0]]=0;
+  renderVariables();
+  return;
+ }
+
+ if(op==="varAdd"){
+  if(
+   typeof state.variables[a[0]]!=="number"
+  ){
+   state.variables[a[0]]=0;
   }
 
-  bubble.textContent=text;
-  bubble.style.left=(o.x+30)+"px";
-  bubble.style.top=(o.y-40)+"px";
+  state.variables[a[0]]+=
+   Number(a[1]);
+
+  renderVariables();
+  return;
+ }
+
+ if(op==="listCreate"){
+  if(!state.lists){
+   state.lists={};
+  }
+
+  state.lists[a[0]]=[];
+  return;
+ }
+
+ if(op==="listAdd"){
+  if(!state.lists){
+   state.lists={};
+  }
+
+  if(!state.lists[a[0]]){
+   state.lists[a[0]]=[];
+  }
+
+  state.lists[a[0]].push(a[1]);
+  return;
+ }
+
+ if(op==="listLength"){
+  if(!state.lists)return;
+
+  const list=
+   state.lists[a[0]]||[];
+
+  state.actor.lastValue=
+   list.length;
+
+  return;
+ }
+
+ if(op==="add"){
+  state.actor.lastValue=
+   Number(a[0])+
+   Number(a[1]);
+  return;
+ }
+
+ if(op==="sub"){
+  state.actor.lastValue=
+   Number(a[0])-
+   Number(a[1]);
+  return;
+ }
+
+ if(op==="mul"){
+  state.actor.lastValue=
+   Number(a[0])*
+   Number(a[1]);
+  return;
+ }
+
+ if(op==="div"){
+  state.actor.lastValue=
+   Number(a[1])===0
+    ?0
+    :Number(a[0])/Number(a[1]);
+  return;
+ }
+
+ if(op==="random"){
+  state.actor.lastValue=
+   Math.floor(
+    Math.random()*
+    (Number(a[1])-Number(a[0])+1)
+   )+
+   Number(a[0]);
+
+  return;
+ }
+
+ if(op==="roomCreate"){
+  if(state.mode!=="online"){
+   alert("온라인 블록은 온라인 모드에서 사용할 수 있습니다.");
+  }else{
+   alert("온라인 방 기능은 Worker 연결 후 사용할 수 있습니다.");
+  }
+  return;
+ }
+
+ if(op==="roomJoin"){
+  if(state.mode!=="online"){
+   alert("온라인 블록은 온라인 모드에서 사용할 수 있습니다.");
+  }else{
+   const room=prompt("방 코드");
+   if(room){
+    alert("방 참가 요청: "+room);
+   }
+  }
+  return;
+ }
+
+ if(op==="broadcast"){
+  if(state.mode!=="online"){
+   alert("온라인 모드에서만 사용할 수 있습니다.");
+  }
+  return;
+ }
 }
 
-function clearBubble(){
-  document.querySelector(".bubble")?.remove();
+/* =========================================================
+   SPEECH
+   ========================================================= */
+
+function showSpeech(obj,text){
+
+ const stage=$("#stage");
+
+ if(!stage)return;
+
+ const bubble=document.createElement("div");
+
+ bubble.style.position="absolute";
+ bubble.style.left=
+  Math.max(5,obj.x-40)+"px";
+
+ bubble.style.top=
+  Math.max(5,obj.y-60)+"px";
+
+ bubble.style.background="#fff";
+ bubble.style.border="2px solid #333";
+ bubble.style.borderRadius="12px";
+ bubble.style.padding="6px 10px";
+ bubble.style.zIndex="10";
+
+ bubble.textContent=text;
+
+ stage.appendChild(bubble);
+
+ setTimeout(()=>{
+  bubble.remove();
+ },2000);
 }
 
-/* ---------------------------------------------------------
-   WEBSOCKET
-   --------------------------------------------------------- */
+/* =========================================================
+   PAINT
+   ========================================================= */
 
-function connectWS(){
+function openPaint(){
 
-  if(state.ws?.readyState===1)return;
+ const modal=document.createElement("div");
 
-  try{
+ modal.className="modal";
 
-    const proto=
-      location.protocol==="https:"
-        ?"wss:"
-        :"ws:";
+ modal.innerHTML=`
+ <div class="modal-box">
 
-    state.ws=new WebSocket(
-      proto+
-      "//"+
-      location.host+
-      "/ws"
+  <h2>🎨 그림판</h2>
+
+  <div class="paint-tools">
+
+   <button data-tool="pen">
+    펜
+   </button>
+
+   <button data-tool="erase">
+    지우개
+   </button>
+
+   <button data-tool="line">
+    선
+   </button>
+
+   <button data-tool="rect">
+    사각형
+   </button>
+
+   <button data-tool="circle">
+    원
+   </button>
+
+   <button data-tool="fill">
+    채우기
+   </button>
+
+   <input
+    id="paintColor"
+    type="color"
+    value="${state.paint.color}"
+   >
+
+   <input
+    id="paintWidth"
+    type="range"
+    min="1"
+    max="60"
+    value="${state.paint.width}"
+   >
+
+   <button id="paintUndo">
+    ↩ 실행취소
+   </button>
+
+   <button id="paintRedo">
+    ↪ 다시실행
+   </button>
+
+   <button id="paintImage">
+    🖼 이미지 불러오기
+   </button>
+
+   <button id="paintExport">
+    PNG 저장
+   </button>
+
+   <button id="paintClose">
+    닫기
+   </button>
+
+  </div>
+
+  <input
+   id="imageFile"
+   type="file"
+   accept="image/*"
+   hidden
+  >
+
+  <canvas
+   id="paintCanvas"
+   class="paint-canvas"
+   width="800"
+   height="500"
+  ></canvas>
+
+ </div>
+ `;
+
+ document.body.appendChild(modal);
+
+ const canvas=$("#paintCanvas");
+ const ctx=canvas.getContext("2d");
+
+ ctx.fillStyle="#ffffff";
+ ctx.fillRect(
+  0,
+  0,
+  canvas.width,
+  canvas.height
+ );
+
+ let drawing=false;
+ let start=null;
+ let last=null;
+
+ function position(e){
+
+  const r=
+   canvas.getBoundingClientRect();
+
+  return {
+   x:
+    (e.clientX-r.left)*
+    canvas.width/r.width,
+
+   y:
+    (e.clientY-r.top)*
+    canvas.height/r.height
+  };
+ }
+
+ function snapshot(){
+
+  state.paint.undo.push(
+   ctx.getImageData(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+   )
+  );
+
+  if(state.paint.undo.length>30){
+   state.paint.undo.shift();
+  }
+
+  state.paint.redo=[];
+ }
+
+ function line(a,b){
+
+  ctx.strokeStyle=
+   state.paint.color;
+
+  ctx.lineWidth=
+   state.paint.width;
+
+  ctx.lineCap="round";
+
+  ctx.beginPath();
+  ctx.moveTo(a.x,a.y);
+  ctx.lineTo(b.x,b.y);
+  ctx.stroke();
+ }
+
+ canvas.onpointerdown=e=>{
+
+  snapshot();
+
+  drawing=true;
+
+  last=position(e);
+  start=last;
+
+  if(state.paint.tool==="fill"){
+   floodFill(
+    ctx,
+    last.x,
+    last.y,
+    state.paint.color
+   );
+
+   drawing=false;
+  }
+ };
+
+ canvas.onpointermove=e=>{
+
+  if(!drawing)return;
+
+  const p=position(e);
+
+  if(
+   state.paint.tool==="pen"||
+   state.paint.tool==="erase"
+  ){
+
+   if(
+    state.paint.tool==="erase"
+   ){
+    ctx.save();
+    ctx.globalCompositeOperation=
+     "destination-out";
+
+    line(last,p);
+
+    ctx.restore();
+   }else{
+    line(last,p);
+   }
+
+   last=p;
+  }
+ };
+
+ canvas.onpointerup=e=>{
+
+  if(!drawing)return;
+
+  drawing=false;
+
+  const p=position(e);
+
+  ctx.globalCompositeOperation=
+   "source-over";
+
+  if(state.paint.tool==="line"){
+
+   line(start,p);
+
+  }
+
+  else if(
+   state.paint.tool==="rect"
+  ){
+
+   ctx.strokeStyle=
+    state.paint.color;
+
+   ctx.lineWidth=
+    state.paint.width;
+
+   ctx.strokeRect(
+    start.x,
+    start.y,
+    p.x-start.x,
+    p.y-start.y
+   );
+
+  }
+
+  else if(
+   state.paint.tool==="circle"
+  ){
+
+   const rx=
+    (p.x-start.x)/2;
+
+   const ry=
+    (p.y-start.y)/2;
+
+   ctx.beginPath();
+
+   ctx.ellipse(
+    start.x+rx,
+    start.y+ry,
+    Math.abs(rx),
+    Math.abs(ry),
+    0,
+    0,
+    Math.PI*2
+   );
+
+   ctx.strokeStyle=
+    state.paint.color;
+
+   ctx.lineWidth=
+    state.paint.width;
+
+   ctx.stroke();
+  }
+ };
+
+ $$("[data-tool]").forEach(b=>{
+  b.onclick=()=>{
+   state.paint.tool=
+    b.dataset.tool;
+  };
+ });
+
+ $("#paintColor").oninput=e=>{
+  state.paint.color=
+   e.target.value;
+ };
+
+ $("#paintWidth").oninput=e=>{
+  state.paint.width=
+   Number(e.target.value);
+ };
+
+ $("#paintUndo").onclick=()=>{
+
+  if(!state.paint.undo.length)return;
+
+  state.paint.redo.push(
+   ctx.getImageData(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+   )
+  );
+
+  ctx.putImageData(
+   state.paint.undo.pop(),
+   0,
+   0
+  );
+ };
+
+ $("#paintRedo").onclick=()=>{
+
+  if(!state.paint.redo.length)return;
+
+  state.paint.undo.push(
+   ctx.getImageData(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+   )
+  );
+
+  ctx.putImageData(
+   state.paint.redo.pop(),
+   0,
+   0
+  );
+ };
+
+ $("#paintImage").onclick=()=>{
+  $("#imageFile").click();
+ };
+
+ $("#imageFile").onchange=e=>{
+
+  const file=e.target.files[0];
+
+  if(!file)return;
+
+  const image=new Image();
+
+  image.onload=()=>{
+
+   snapshot();
+
+   ctx.drawImage(
+    image,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+   );
+  };
+
+  image.src=
+   URL.createObjectURL(file);
+ };
+
+ $("#paintExport").onclick=()=>{
+
+  const a=document.createElement("a");
+
+  a.href=
+   canvas.toDataURL("image/png");
+
+  a.download=
+   "codescript-drawing.png";
+
+  a.click();
+ };
+
+ $("#paintClose").onclick=()=>{
+  modal.remove();
+ };
+}
+
+/* =========================================================
+   FLOOD FILL
+   ========================================================= */
+
+function floodFill(
+ ctx,
+ x,
+ y,
+ color
+){
+
+ const w=ctx.canvas.width;
+ const h=ctx.canvas.height;
+
+ x=Math.floor(x);
+ y=Math.floor(y);
+
+ if(
+  x<0||y<0||
+  x>=w||y>=h
+ )return;
+
+ const image=
+  ctx.getImageData(
+   0,
+   0,
+   w,
+   h
+  );
+
+ const data=image.data;
+
+ const start=
+  (y*w+x)*4;
+
+ const target=[
+  data[start],
+  data[start+1],
+  data[start+2],
+  data[start+3]
+ ];
+
+ const hex=
+  color.replace("#","");
+
+ const rgb=[
+  parseInt(hex.substring(0,2),16),
+  parseInt(hex.substring(2,4),16),
+  parseInt(hex.substring(4,6),16)
+ ];
+
+ if(
+  target[0]===rgb[0]&&
+  target[1]===rgb[1]&&
+  target[2]===rgb[2]
+ ){
+  return;
+ }
+
+ const stack=[[x,y]];
+ const seen=
+  new Uint8Array(w*h);
+
+ while(stack.length){
+
+  const [px,py]=stack.pop();
+
+  if(
+   px<0||py<0||
+   px>=w||py>=h
+  )continue;
+
+  const index=
+   py*w+px;
+
+  if(seen[index])continue;
+
+  const i=index*4;
+
+  if(
+   data[i]!==target[0]||
+   data[i+1]!==target[1]||
+   data[i+2]!==target[2]||
+   data[i+3]!==target[3]
+  ){
+   continue;
+  }
+
+  seen[index]=1;
+
+  data[i]=rgb[0];
+  data[i+1]=rgb[1];
+  data[i+2]=rgb[2];
+  data[i+3]=255;
+
+  stack.push(
+   [px+1,py],
+   [px-1,py],
+   [px,py+1],
+   [px,py-1]
+  );
+ }
+
+ ctx.putImageData(
+  image,
+  0,
+  0
+ );
+}
+
+/* =========================================================
+   SOUNDS
+   ========================================================= */
+
+function openSounds(){
+
+ const modal=document.createElement("div");
+
+ modal.className="modal";
+
+ modal.innerHTML=`
+ <div class="modal-box">
+
+  <h2>🔊 소리 관리</h2>
+
+  <input
+   id="soundFiles"
+   type="file"
+   accept="audio/*"
+   multiple
+  >
+
+  <br><br>
+
+  <button id="recordStart">
+   ● 녹음 시작
+  </button>
+
+  <button id="recordStop">
+   ■ 녹음 중지
+  </button>
+
+  <div id="soundManagerList"></div>
+
+  <br>
+
+  <button id="soundClose">
+   닫기
+  </button>
+
+ </div>
+ `;
+
+ document.body.appendChild(modal);
+
+ let recorder=null;
+ let chunks=[];
+ let stream=null;
+
+ function render(){
+
+  const el=
+   $("#soundManagerList");
+
+  if(!state.sounds.length){
+   el.innerHTML=
+    "<p>등록된 소리가 없습니다.</p>";
+   return;
+  }
+
+  el.innerHTML=
+   state.sounds.map((s,i)=>
+   `
+   <div class="sound-item">
+
+    <input
+     value="${escapeHTML(s.name)}"
+     data-name="${i}"
+    >
+
+    <button data-play="${i}">
+     ▶
+    </button>
+
+    <button data-delete="${i}">
+     삭제
+    </button>
+
+   </div>
+   `
+   ).join("");
+
+  $$("[data-play]").forEach(b=>{
+   b.onclick=()=>{
+    const s=
+     state.sounds[
+      Number(b.dataset.play)
+     ];
+
+    try{
+     s.audio.currentTime=0;
+     s.audio.play();
+    }catch(e){}
+   };
+  });
+
+  $$("[data-delete]").forEach(b=>{
+   b.onclick=()=>{
+    state.sounds.splice(
+     Number(b.dataset.delete),
+     1
     );
 
-    state.ws.onopen=()=>{
-      state.ws.send(JSON.stringify({
-        type:"join_room",
-        room:state.room||"global",
-        user:state.user?.username
-      }));
-    };
+    render();
+    renderSoundList();
+   };
+  });
 
-    state.ws.onmessage=e=>{
-      try{
-        const msg=JSON.parse(e.data);
+  $$("[data-name]").forEach(input=>{
+   input.onchange=()=>{
+    state.sounds[
+     Number(input.dataset.name)
+    ].name=input.value;
+   };
+  });
+ }
 
-        if(msg.type==="chat"){
-          console.log(
-            `[${msg.user}]`,
-            msg.text
-          );
-        }
-      }catch{}
-    };
+ $("#soundFiles").onchange=e=>{
 
-    state.ws.onclose=()=>{
-      state.ws=null;
-    };
+  [...e.target.files].forEach(file=>{
 
-  }catch{}
-}
+   const url=
+    URL.createObjectURL(file);
 
-/* ---------------------------------------------------------
-   BIND EDITOR
-   --------------------------------------------------------- */
+   const audio=
+    new Audio(url);
 
-function bindEditor(){
+   state.sounds.push({
+    name:file.name,
+    audio,
+    url
+   });
 
-  $(".cat").onclick=function(){
-    state.category=this.dataset.cat;
+  });
 
-    document.querySelectorAll(".cat")
-      .forEach(x=>x.classList.remove("active"));
+  render();
+  renderSoundList();
+ };
 
-    this.classList.add("active");
-
-    renderBlocks();
-  };
-
-  $("#goHome").onclick=home;
-
-  $("#run").onclick=run;
-
-  $("#stop").onclick=()=>{
-    state.stop=true;
-  };
-
-  $("#save").onclick=saveProject;
-
-  $("#addObject").onclick=addObject;
-
-  $("#uploadSound").onclick=()=>{
-    $("#soundFile").click();
-  };
-
-  $("#soundFile").onchange=e=>{
-    uploadSound(e.target.files[0]);
-    e.target.value="";
-  };
-
-  $("#recordSound").onclick=recordSound;
-
-  $("#paintOpen").onclick=()=>{
-    $("#paintModal").classList.add("show");
-  };
-
-  $("#closePaint").onclick=()=>{
-    $("#paintModal").classList.remove("show");
-  };
-}
-
-/* ---------------------------------------------------------
-   STARTUP
-   --------------------------------------------------------- */
-
-async function boot(){
+ $("#recordStart").onclick=async()=>{
 
   try{
 
-    const data=await api("/api/me");
+   stream=
+    await navigator.mediaDevices
+     .getUserMedia({
+      audio:true
+     });
 
-    if(data.loggedIn){
-      state.user=data.user;
-      home();
-    }else{
-      loginPage(false);
+   chunks=[];
+
+   recorder=
+    new MediaRecorder(stream);
+
+   recorder.ondataavailable=e=>{
+    chunks.push(e.data);
+   };
+
+   recorder.onstop=()=>{
+
+    const blob=
+     new Blob(
+      chunks,
+      {type:"audio/webm"}
+     );
+
+    const url=
+     URL.createObjectURL(blob);
+
+    const audio=
+     new Audio(url);
+
+    state.sounds.push({
+     name:
+      "녹음 "+(state.sounds.length+1),
+     audio,
+     url
+    });
+
+    if(stream){
+     stream
+      .getTracks()
+      .forEach(t=>t.stop());
     }
 
-  }catch{
-    loginPage(false);
+    render();
+    renderSoundList();
+   };
+
+   recorder.start();
+
+  }catch(e){
+
+   alert(
+    "마이크 사용 권한이 필요합니다."
+   );
   }
+ };
+
+ $("#recordStop").onclick=()=>{
+
+  if(
+   recorder&&
+   recorder.state==="recording"
+  ){
+   recorder.stop();
+  }
+ };
+
+ $("#soundClose").onclick=()=>{
+  modal.remove();
+ };
+
+ render();
 }
 
-boot();
+function renderSoundList(){
+
+ const el=$("#soundList");
+
+ if(!el)return;
+
+ if(!state.sounds.length){
+  el.textContent="없음";
+  return;
+ }
+
+ el.innerHTML=
+  state.sounds.map((s,i)=>
+   `<div>
+    ${escapeHTML(s.name)}
+    <button data-mini-play="${i}">
+     ▶
+    </button>
+   </div>`
+  ).join("");
+
+ $$("[data-mini-play]").forEach(b=>{
+  b.onclick=()=>{
+   const s=
+    state.sounds[
+     Number(b.dataset.miniPlay)
+    ];
+
+   try{
+    s.audio.currentTime=0;
+    s.audio.play();
+   }catch(e){}
+  };
+ });
+}
+
+/* =========================================================
+   SAVE / LOAD
+   ========================================================= */
+
+function saveProject(){
+
+ state.projectName=
+  $("#projectName")?
+   $("#projectName").value:
+   state.projectName;
+
+ const data={
+  projectName:state.projectName,
+  mode:state.mode,
+  code:state.code,
+  objects:state.objects,
+  variables:state.variables,
+  lists:state.lists,
+  user:state.user
+ };
+
+ try{
+
+  localStorage.setItem(
+   "codescript_project",
+   JSON.stringify(data)
+  );
+
+  alert("프로젝트를 저장했습니다.");
+
+ }catch(e){
+
+  alert(
+   "프로젝트 저장 중 오류가 발생했습니다."
+  );
+}
+
+}
+
+function loadProject(){
+
+ try{
+
+  const raw=
+   localStorage.getItem(
+    "codescript_project"
+   );
+
+  if(!raw)return;
+
+  const data=
+   JSON.parse(raw);
+
+  if(data.projectName)
+   state.projectName=
+    data.projectName;
+
+  if(Array.isArray(data.code))
+   state.code=
+    data.code;
+
+  if(Array.isArray(data.objects))
+   state.objects=
+    data.objects;
+
+  if(data.variables)
+   state.variables=
+    data.variables;
+
+  if(data.lists)
+   state.lists=
+    data.lists;
+
+ }catch(e){
+
+  console.warn(
+   "project load failed",
+   e
+  );
+}
+
+/* =========================================================
+   UTIL
+   ========================================================= */
+
+function clampObject(o){
+
+ o.x=Math.max(
+  0,
+  Math.min(
+   320,
+   o.x
+  )
+ );
+
+ o.y=Math.max(
+  0,
+  Math.min(
+   260,
+   o.y
+  )
+ );
+}
+
+function sleep(ms){
+
+ return new Promise(
+  resolve=>
+   setTimeout(resolve,ms)
+ );
+}
+
+function escapeHTML(value){
+
+ return String(value??"")
+  .replace(/&/g,"&amp;")
+  .replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;")
+  .replace(/"/g,"&quot;")
+  .replace(/'/g,"&#039;");
+}
+
+/* =========================================================
+   STARTUP
+   ========================================================= */
+
+try{
+
+ const savedUser=
+  localStorage.getItem(
+   "codescript_user"
+  );
+
+ if(savedUser){
+  state.user=savedUser;
+ }
+
+ loadProject();
+
+ if(!state.objects.length){
+
+  state.objects=[
+   {
+    name:"오브젝트1",
+    emoji:"🐟",
+    x:160,
+    y:130,
+    size:100,
+    visible:true,
+    direction:0
+   }
+  ];
+
+ }
+
+ home();
+
+}catch(error){
+
+ /*
+   어떤 이유로 초기화에 실패해도
+   흰 화면 대신 오류를 표시한다.
+ */
+
+ document.body.innerHTML=
+  `
+  <div style="
+   padding:40px;
+   font-family:Arial;
+  ">
+   <h2>Codescript 초기화 오류</h2>
+   <p>
+    ${escapeHTML(error.message)}
+   </p>
+   <button
+    onclick="location.reload()"
+   >
+    다시 시도
+   </button>
+  </div>
+  `;
+
+ console.error(error);
+}
 
 })();
