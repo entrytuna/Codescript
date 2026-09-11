@@ -2,2089 +2,2721 @@
 "use strict";
 
 /* =========================================================
-   Codescript main.js
-   - 499 functional blocks
-   - 실행 엔진
-   - 변수 / 리스트 / 함수
-   - 붓 / 소리 / 글상자
-   - 온라인
-   - 확장 그림판
+   CODESCRIPT FINAL
    ========================================================= */
 
-const CATS=[
- ["start","시작","#ef5350"],
- ["flow","흐름","#42a5f5"],
- ["move","움직임","#ff9800"],
- ["looks","생김새","#ffd54f"],
- ["brush","붓","#795548"],
- ["text","글상자","#8bc34a"],
- ["sound","소리","#ec407a"],
- ["judge","판단","#4fc3f7"],
- ["calc","계산","#43a047"],
- ["online","온라인","#90a4ae"],
- ["data","자료","#8e44ad"],
- ["func","함수","#00acc1"]
+const CATS = [
+  ["start","시작","#ef5350"],
+  ["flow","흐름","#42a5f5"],
+  ["move","움직임","#ff9800"],
+  ["looks","생김새","#ffd54f"],
+  ["brush","붓","#795548"],
+  ["text","글상자","#8bc34a"],
+  ["sound","소리","#ec407a"],
+  ["judge","판단","#4fc3f7"],
+  ["calc","계산","#43a047"],
+  ["online","온라인","#90a4ae"],
+  ["data","자료","#8e44ad"],
+  ["func","함수","#00acc1"]
 ];
 
-const COLORS=Object.fromEntries(CATS.map(x=>[x[0],x[2]]));
-
-const BASE={
-start:[
- ["초록 깃발을 클릭했을 때","start"],
- ["키를 눌렀을 때","start"],
- ["오브젝트를 클릭했을 때","start"],
- ["실행 시작","start"]
-],
-flow:[
- ["1초 기다리기","wait",1000],
- ["2초 기다리기","wait",2000],
- ["5초 기다리기","wait",5000],
- ["2번 반복하기","repeat",2],
- ["5번 반복하기","repeat",5],
- ["10번 반복하기","repeat",10],
- ["무한 반복하기","forever"],
- ["만약","if"],
- ["아니면","else"],
- ["반복 중단","break"]
-],
-move:[
- ["x 10만큼 움직이기","move",10,0],
- ["x -10만큼 움직이기","move",-10,0],
- ["y 10만큼 움직이기","move",0,-10],
- ["y -10만큼 움직이기","move",0,-10],
- ["x좌표 0으로 이동","setx",0],
- ["y좌표 0으로 이동","sety",0],
- ["방향 90도로 정하기","direction",90],
- ["15도 회전하기","turn",15],
- ["-15도 회전하기","turn",-15],
- ["180도 돌기","turn",180]
-],
-looks:[
- ["안녕이라고 말하기","say","안녕"],
- ["생각하기","say","음..."],
- ["말하기 지우기","say",""],
- ["크기 100%로 정하기","size",100],
- ["크기 50%로 정하기","size",50],
- ["크기 150%로 정하기","size",150],
- ["보이기","visible",true],
- ["숨기기","visible",false]
-],
-brush:[
- ["펜 내리기","penDown"],
- ["펜 올리기","penUp"],
- ["펜 색 정하기","penColor","#000000"],
- ["펜 굵기 5로 정하기","penWidth",5],
- ["펜 굵기 10으로 정하기","penWidth",10],
- ["도장 찍기","stamp"],
- ["모두 지우기","clearPaint"]
-],
-text:[
- ["글상자 만들기","textShow"],
- ["글상자 삭제","textClear"],
- ["내용 정하기","textSet","안녕하세요"],
- ["내용 추가하기","textAdd","!"],
- ["글자 크기 정하기","textSize",24]
-],
-sound:[
- ["소리 재생","beep"],
- ["모든 소리 정지","soundStop"],
- ["볼륨 100%로 정하기","volume",1],
- ["볼륨 50%로 정하기","volume",.5],
- ["음 높이 440Hz","tone",440],
- ["음 높이 880Hz","tone",880],
- ["에코 넣기","echo",.4],
- ["에코 제거","echo",0]
-],
-judge:[
- ["마우스가 눌렸는가?","mouse"],
- ["키가 눌렸는가?","key"],
- ["벽에 닿았는가?","wall"],
- ["오브젝트에 닿았는가?","touch"],
- ["숫자 > 10","gt",10],
- ["숫자 = 10","eq",10],
- ["숫자 < 10","lt",10]
-],
-calc:[
- ["더하기","add"],
- ["빼기","sub"],
- ["곱하기","mul"],
- ["나누기","div"],
- ["나머지","mod"],
- ["랜덤","random"],
- ["최솟값","min"],
- ["최댓값","max"],
- ["문자열 길이","length"],
- ["절댓값","abs"],
- ["반올림","round"],
- ["올림","ceil"],
- ["내림","floor"]
-],
-online:[
- ["방 만들기","createRoom"],
- ["방 참가하기","joinRoom"],
- ["방 나가기","leaveRoom"],
- ["방 인원","roomCount"],
- ["온라인 메시지 보내기","chat"],
- ["온라인 메시지 받기","message"]
-],
-data:[
- ["변수 만들기","newVar"],
- ["변수 삭제","delVar"],
- ["변수 설정","setVar"],
- ["변수 바꾸기","addVar"],
- ["변수 읽기","getVar"],
- ["리스트 만들기","newList"],
- ["리스트 추가","pushList"],
- ["리스트 첫 번째 삭제","shiftList"],
- ["리스트 마지막 삭제","popList"],
- ["리스트 읽기","getList"]
-],
-func:[
- ["함수 만들기","newFunc"],
- ["함수 실행","callFunc"],
- ["함수 반환","return"]
-]
-};
-
-const blocks=[];
-let blockNo=0;
-
-function addBlock(cat,name,action){
- blocks.push({
-  id:"b"+(++blockNo),
-  cat,
-  name,
-  color:COLORS[cat],
-  action
- });
-}
-
-for(const [cat] of CATS){
- for(const d of (BASE[cat]||[])){
-  const [name,type,...args]=d;
-  addBlock(cat,name,{type,args});
- }
-}
-
-/* =========================================================
-   499개가 전부 실제 action을 갖도록 확장
-   ========================================================= */
-
-const variants=[
- ["move","움직이기","move",[-200,-150,-100,-50,-20,20,50,100,150,200]],
- ["move","회전하기","turn",[-180,-90,-45,-30,-15,15,30,45,90,180]],
- ["flow","기다리기","wait",[100,250,500,750,1000,1500,2000,3000]],
- ["flow","반복하기","repeat",[1,2,3,4,5,10,20,50]],
- ["looks","크기로 정하기","size",[25,50,75,100,125,150,175,200]],
- ["sound","볼륨 정하기","volume",[0,.25,.5,.75,1]],
- ["sound","음 높이","tone",[110,220,330,440,550,660,880,1000]],
- ["brush","펜 굵기","penWidth",[1,2,3,5,8,10,15,20,30]],
- ["calc","더하기","add",[1,2,5,10,20,50]],
- ["calc","빼기","sub",[1,2,5,10,20,50]],
- ["calc","곱하기","mul",[1,2,3,5,10,20]],
- ["calc","나누기","div",[1,2,5,10,20]],
- ["judge","보다 큰가?","gt",[0,5,10,20,50,100]],
- ["judge","같은가?","eq",[0,5,10,20,50,100]],
- ["judge","보다 작은가?","lt",[0,5,10,20,50,100]],
- ["data","변수에 더하기","addVar",[1,2,5,10,20,50]],
- ["text","글자 크기","textSize",[10,12,16,20,24,32,48]],
- ["looks","보이기","visible",[true,false]]
-];
-
-let vi=0;
-
-while(blocks.length<499){
- const v=variants[vi%variants.length];
- const vals=v[3];
- const value=vals[Math.floor(vi/variants.length)%vals.length];
- const cat=v[0];
- const name=v[1]+" "+value+(v[2]==="volume"?"%":"");
- addBlock(cat,name,{type:v[2],args:[value],generated:true});
- vi++;
-}
-
-/* =========================================================
-   상태
-   ========================================================= */
-
-const state={
- page:"home",
- category:"all",
- mode:"offline",
- project:"나의 프로젝트",
- code:[],
- vars:{},
- lists:{},
- funcs:{},
- history:[],
- future:[],
- running:false,
- stop:false,
- lastValue:0,
- lastText:"",
- audio:null,
- oscillator:null,
-
- actor:{
-  x:320,
-  y:200,
-  direction:90,
-  size:100,
-  visible:true
- },
-
- pen:{
-  down:false,
-  color:"#000000",
-  width:5
- },
-
- paint:{
-  mode:"bitmap",
-  tool:"pen",
-  color:"#111111",
-  alpha:100,
-  width:8,
-  zoom:100,
-  activeLayer:0,
-  layers:[
-   {name:"배경",visible:true,canvas:null},
-   {name:"레이어 1",visible:true,canvas:null}
-  ],
-  objects:[],
-  pixels:null
- },
-
- ws:null,
- connected:false,
- room:null,
- users:0
-};
-
-/* =========================================================
-   기본 함수
-   ========================================================= */
-
-function esc(v){
- return String(v).replace(/[&<>"']/g,c=>({
-  "&":"&amp;",
-  "<":"&lt;",
-  ">":"&gt;",
-  '"':"&quot;",
-  "'":"&#39;"
- }[c]));
-}
-
-function sleep(ms){
- return new Promise(r=>setTimeout(r,ms));
-}
-
-function log(t){
- const e=document.getElementById("log");
- if(!e)return;
- e.textContent+=t+"\n";
- e.scrollTop=e.scrollHeight;
-}
-
-function clone(v){
- return JSON.parse(JSON.stringify(v));
-}
-
-function snap(){
- return JSON.stringify({
-  code:state.code,
-  vars:state.vars,
-  lists:state.lists,
-  funcs:state.funcs,
-  actor:state.actor,
-  pen:state.pen
- });
-}
-
-function restore(s){
- try{
-  const d=JSON.parse(s);
-  state.code=d.code||[];
-  state.vars=d.vars||{};
-  state.lists=d.lists||{};
-  state.funcs=d.funcs||{};
-  Object.assign(state.actor,d.actor||{});
-  Object.assign(state.pen,d.pen||{});
-  render();
- }catch(e){}
-}
-
-function remember(){
- state.history.push(snap());
- if(state.history.length>100)state.history.shift();
- state.future=[];
-}
-
-/* =========================================================
-   CSS
-   ========================================================= */
-
-const css=`
-*{box-sizing:border-box}
-body{
- margin:0;
- background:#f3f3f3;
- color:#222;
- font-family:Arial,"Noto Sans KR",sans-serif
-}
-button,input,select{font:inherit}
-button{
- border:1px solid #aaa;
- background:#fff;
- border-radius:8px;
- padding:8px 11px;
- cursor:pointer;
- font-weight:700
-}
-button:hover{background:#eee}
-.top{
- height:58px;
- background:#fff;
- border-bottom:1px solid #ccc;
- display:flex;
- align-items:center;
- gap:7px;
- padding:8px 14px
-}
-.logo{font-size:21px;font-weight:900}
-.spacer{flex:1}
-.home{
- max-width:1100px;
- margin:auto;
- padding:40px 22px
-}
-.hero,.card{
- background:#fff;
- border:1px solid #ddd;
- border-radius:16px;
- padding:22px;
- box-shadow:0 3px 12px #0001
-}
-.hero h1{font-size:42px;margin:0 0 8px}
-.cards{
- display:grid;
- grid-template-columns:repeat(3,1fr);
- gap:15px;
- margin-top:18px
-}
-.editor{
- height:calc(100vh - 58px);
- display:grid;
- grid-template-columns:190px 1fr 330px
-}
-.side,.right{
- background:#fff;
- overflow:auto;
- padding:9px
-}
-.side{border-right:1px solid #ccc}
-.right{border-left:1px solid #ccc}
-.cat{
- width:100%;
- margin:3px 0;
- text-align:left;
- border:0
-}
-.work{
- display:grid;
- grid-template-rows:48px 1fr
-}
-.tools{
- background:#fff;
- border-bottom:1px solid #ccc;
- display:flex;
- gap:5px;
- align-items:center;
- padding:7px;
- overflow:auto
-}
-.board{
- display:grid;
- grid-template-columns:1fr 400px;
- min-height:0;
- background:#ddd
-}
-#code{
- padding:18px;
- overflow:auto
-}
-.stage{
- background:#333;
- display:flex;
- align-items:center;
- justify-content:center
-}
-#cv{
- background:#fff;
- max-width:95%;
- max-height:90%
-}
-.block{
- width:290px;
- min-height:44px;
- margin:7px 0;
- padding:12px 16px;
- border-radius:13px 18px 18px 13px;
- color:#111;
- font-weight:800;
- box-shadow:0 2px 2px #888;
- cursor:pointer;
- position:relative
-}
-.block:before{
- content:"";
- position:absolute;
- left:0;
- top:0;
- border-top:9px solid #eee;
- border-right:9px solid transparent
-}
-#pal .block{
- width:100%;
- font-size:13px
-}
-.del{
- float:right;
- border:0;
- background:#0002;
- padding:2px 7px
-}
-.small{font-size:12px;color:#666}
-.status{
- font-size:12px;
- padding:6px 9px;
- border-radius:8px;
- background:#eee
-}
-.ok{background:#d8f5df}
-.no{background:#ffe0e0}
-#log{
- height:130px;
- background:#111;
- color:#0f0;
- overflow:auto;
- padding:8px;
- white-space:pre-wrap;
- font-size:12px
-}
-.paintModal{
- position:fixed;
- inset:0;
- background:#0009;
- z-index:1000;
- display:flex;
- align-items:center;
- justify-content:center
-}
-.paintBox{
- width:min(1100px,95vw);
- height:min(750px,94vh);
- background:#fff;
- border-radius:16px;
- overflow:hidden;
- display:grid;
- grid-template-rows:55px 1fr
-}
-.paintTop{
- display:flex;
- gap:6px;
- align-items:center;
- padding:8px;
- border-bottom:1px solid #ccc
-}
-.paintMain{
- display:grid;
- grid-template-columns:170px 1fr 170px;
- min-height:0
-}
-.paintTools,.layers{
- padding:10px;
- overflow:auto;
- border-right:1px solid #ddd
-}
-.layers{border-left:1px solid #ddd;border-right:0}
-.paintTools button{
- width:100%;
- margin:3px 0
-}
-.paintArea{
- background:#555;
- display:flex;
- align-items:center;
- justify-content:center;
- overflow:auto
-}
-#paintCanvas{
- background:#fff;
- box-shadow:0 2px 12px #0008
-}
-.layer{
- padding:8px;
- margin:4px 0;
- background:#eee;
- border-radius:7px;
- cursor:pointer
-}
-.layer.active{outline:2px solid #333}
-`;
-
-document.head.insertAdjacentHTML("beforeend","<style>"+css+"</style>");
-document.title="Codescript";
-document.head.insertAdjacentHTML("beforeend",
-`<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='30'>🎮</text></svg>">`
+const COLORS = Object.fromEntries(
+  CATS.map(x => [x[0],x[2]])
 );
 
-/* =========================================================
-   화면
-   ========================================================= */
+/* ---------------------------------------------------------
+   BLOCKS
+   --------------------------------------------------------- */
 
-function shell(content){
- document.body.innerHTML=`
- <div class="top">
-  <div class="logo">🎮 Codescript</div>
-  <button onclick="CS.home()">홈</button>
-  <button onclick="CS.explore()">탐험하기</button>
-  <button onclick="CS.chooseEditor()">만들기</button>
-  <div class="spacer"></div>
-  <span id="conn" class="status no">서버 오프라인</span>
- </div>
- <main>${content}</main>`;
-}
+const DEFINITIONS = [
+  ["start","초록 깃발을 클릭했을 때","start"],
+  ["start","키를 눌렀을 때","start"],
+  ["start","오브젝트를 클릭했을 때","start"],
+  ["start","실행 시작","start"],
 
-function home(){
- state.page="home";
- shell(`
- <div class="home">
-  <div class="hero">
-   <h1>🎮 Codescript</h1>
-   <p>블록으로 게임과 프로젝트를 만드는 공간</p>
-   <button onclick="CS.chooseEditor()">＋ 새 프로젝트 만들기</button>
-  </div>
-  <div class="cards">
-   <div class="card">
-    <h3>🧭 탐험하기</h3>
-    <p>공개된 프로젝트를 찾아볼 수 있습니다.</p>
-    <button onclick="CS.explore()">탐험</button>
-   </div>
-   <div class="card">
-    <h3>💻 오프라인</h3>
-    <p>인터넷 연결 없이 코딩합니다.</p>
-   </div>
-   <div class="card">
-    <h3>🌐 온라인</h3>
-    <p>최대 20명 실시간 협업.</p>
-   </div>
-  </div>
- </div>`);
-}
+  ["flow","1초 기다리기","wait",1],
+  ["flow","2초 기다리기","wait",2],
+  ["flow","10번 반복하기","repeat",10],
+  ["flow","무한 반복하기","forever"],
+  ["flow","반복 중단","break"],
+  ["flow","만약","if"],
+  ["flow","아니면","else"],
 
-function explore(){
- shell(`
- <div class="home">
-  <div class="hero">
-   <h1>🧭 탐험하기</h1>
-   <p>좋아요 · 북마크 · 공유 · 리메이크</p>
-   <div id="projects" class="cards">
-    <div class="card">프로젝트를 불러오는 중...</div>
-   </div>
-  </div>
- </div>`);
- connect();
- request({type:"list_projects"});
-}
+  ["move","10만큼 움직이기","move",10],
+  ["move","-10만큼 움직이기","move",-10],
+  ["move","x 10만큼 움직이기","movex",10],
+  ["move","x -10만큼 움직이기","movex",-10],
+  ["move","y 10만큼 움직이기","movey",10],
+  ["move","y -10만큼 움직이기","movey",-10],
+  ["move","x좌표 0으로 이동","setx",0],
+  ["move","y좌표 0으로 이동","sety",0],
+  ["move","방향 90도로 정하기","direction",90],
+  ["move","15도 시계방향 회전","turn",15],
+  ["move","15도 반시계방향 회전","turn",-15],
+  ["move","가운데로 이동","center"],
 
-function chooseEditor(){
- const online=confirm(
-  "프로젝트 종류를 선택하세요.\n\n확인 = 온라인\n취소 = 오프라인"
- );
- editor(online?"online":"offline");
-}
+  ["looks","안녕이라고 말하기","say","안녕"],
+  ["looks","생각하기","think","음..."],
+  ["looks","말하기 지우기","clearSay"],
+  ["looks","보이기","show"],
+  ["looks","숨기기","hide"],
+  ["looks","크기 100%로 정하기","size",100],
+  ["looks","크기 50%로 정하기","size",50],
+  ["looks","크기 150%로 정하기","size",150],
+  ["looks","모양 바꾸기","costume"],
 
-function editor(mode){
- state.mode=mode;
- shell(`
- <div class="editor">
-  <aside class="side">
-   <div class="small">
-    블록 499개 · 변수 ${Object.keys(state.vars).length}
-   </div>
-   <div id="cats"></div>
-   <hr>
-   <input id="search" placeholder="블록 검색"
-    style="width:100%;padding:8px">
-   <div id="pal"></div>
-  </aside>
+  ["brush","펜 내리기","penDown"],
+  ["brush","펜 올리기","penUp"],
+  ["brush","모두 지우기","clearPaint"],
+  ["brush","도장 찍기","stamp"],
+  ["brush","펜 굵기 5로 정하기","penWidth",5],
+  ["brush","펜 굵기 10으로 정하기","penWidth",10],
 
-  <section class="work">
-   <div class="tools">
-    <input id="projectName"
-     value="${esc(state.project)}"
-     style="width:150px;padding:7px">
-    <button onclick="CS.undo()">↶</button>
-    <button onclick="CS.redo()">↷</button>
-    <button onclick="CS.clear()">🗑</button>
-    <button onclick="CS.newVar()">＋ 변수</button>
-    <button onclick="CS.newList()">＋ 리스트</button>
-    <button onclick="CS.newFunc()">＋ 함수</button>
-    <button onclick="CS.run()">▶ 실행</button>
-    <button onclick="CS.stop()">■ 정지</button>
-    <button onclick="CS.save()">💾 저장</button>
-   </div>
+  ["text","글자 쓰기","text","Hello"],
+  ["text","글자 지우기","clearText"],
 
-   <div class="board">
-    <div id="code"></div>
-    <div class="stage">
-     <canvas id="cv" width="640" height="400"></canvas>
-    </div>
-   </div>
-  </section>
+  ["sound","소리 재생하기","sound"],
+  ["sound","모든 소리 멈추기","stopSound"],
 
-  <aside class="right">
-   <div class="card">
-    <b>프로젝트</b>
-    <p id="stats"></p>
-    <p>모드: <b id="modeLabel"></b></p>
-    <button onclick="CS.publish()">🌐 공개</button>
-   </div>
+  ["judge","키가 눌렸는지","key"],
+  ["judge","마우스를 클릭했는지","mouse"],
+  ["judge","변수가 0보다 큰지","greater",0],
+  ["judge","변수가 0인지","equal",0],
 
-   <div class="card" id="collabCard">
-    <b>실시간 협업</b>
-    <p id="roomState">방 없음</p>
-    <button onclick="CS.createRoom()">방 만들기</button>
-    <button onclick="CS.joinRoom()">참가</button>
-   </div>
+  ["calc","더하기","add",1,1],
+  ["calc","빼기","sub",1,1],
+  ["calc","곱하기","mul",2,2],
+  ["calc","나누기","div",10,2],
+  ["calc","나머지","mod",10,3],
+  ["calc","랜덤 수","random",1,10],
+  ["calc","반올림","round",1.5],
+  ["calc","절댓값","abs",-5],
 
-   <div class="card">
-    <b>🎨 그림판</b>
-    <p class="small">Bitmap · Vector · Pixelmap</p>
-    <button onclick="CS.openPaint()">그림판 열기</button>
-    <button onclick="CS.clearPaint()">간단히 지우기</button>
-   </div>
+  ["online","온라인 방 만들기","roomCreate"],
+  ["online","온라인 방 참가하기","roomJoin"],
+  ["online","채팅 보내기","chat"],
+  ["online","내 이름 가져오기","username"],
 
-   <div class="card">
-    <b>🔊 소리</b>
-    <button onclick="CS.echo()">테스트 소리</button>
-   </div>
+  ["data","변수 만들기","newVar","변수"],
+  ["data","변수에 값 넣기","setVar","변수",0],
+  ["data","변수 값 바꾸기","changeVar","변수",1],
+  ["data","변수 보이기","showVar","변수"],
+  ["data","변수 숨기기","hideVar","변수"],
+  ["data","리스트 만들기","newList","목록"],
+  ["data","리스트에 추가하기","pushList","목록","값"],
+  ["data","리스트 모두 삭제","clearList","목록"],
 
-   <pre id="log"></pre>
-  </aside>
- </div>`);
+  ["func","함수 만들기","newFunc","함수"],
+  ["func","함수 실행하기","callFunc","함수"]
+];
 
- initEditor();
- render();
- palette();
+const BLOCKS = [];
 
- if(mode==="online")connect();
-}
-
-function initEditor(){
- drawCats();
- const s=document.getElementById("search");
- if(s)s.oninput=palette;
-
- const n=document.getElementById("projectName");
- if(n)n.oninput=()=>{
-  state.project=n.value||"나의 프로젝트";
- };
-}
-
-/* =========================================================
-   블록 목록
-   ========================================================= */
-
-function drawCats(){
- const e=document.getElementById("cats");
- if(!e)return;
-
- e.innerHTML=
- `<button class="cat" onclick="CS.setCat('all')">전체</button>`;
-
- CATS.forEach(c=>{
-  if(c[0]==="online"&&state.mode!=="online")return;
-
-  e.innerHTML+=`
-   <button class="cat"
-    style="background:${c[2]}"
-    onclick="CS.setCat('${c[0]}')">
-    ${c[1]}
-   </button>`;
- });
-}
-
-function palette(){
- const e=document.getElementById("pal");
- if(!e)return;
-
- const q=(document.getElementById("search")?.value||"").toLowerCase();
-
- e.innerHTML=blocks
- .filter(b=>
-  (state.category==="all"||b.cat===state.category)&&
-  !(b.cat==="online"&&state.mode!=="online")&&
-  b.name.toLowerCase().includes(q)
- )
- .map(b=>`
-  <div class="block"
-   style="background:${b.color}"
-   onclick="CS.add('${b.id}')">
-   ${esc(b.name)}
-  </div>`)
- .join("");
-}
-
-function render(){
- const e=document.getElementById("code");
- if(!e)return;
-
- document.getElementById("modeLabel").textContent=
-  state.mode==="online"?"온라인":"오프라인";
-
- document.getElementById("collabCard").style.display=
-  state.mode==="online"?"block":"none";
-
- document.getElementById("stats").textContent=
-  `블록 ${state.code.length} · 변수 ${Object.keys(state.vars).length} · 리스트 ${Object.keys(state.lists).length} · 함수 ${Object.keys(state.funcs).length}`;
-
- e.innerHTML=state.code.map((b,i)=>`
-  <div class="block" style="background:${b.color}">
-   ${esc(b.name)}
-   <button class="del" onclick="CS.del(${i})">×</button>
-  </div>`).join("")||
-  `<p class="small">왼쪽의 블록을 클릭해서 코드를 만드세요.</p>`;
-
- drawStage();
-}
-
-/* =========================================================
-   코드 편집
-   ========================================================= */
-
-function add(id){
- const b=blocks.find(x=>x.id===id);
- if(!b)return;
-
- remember();
-
- state.code.push({
-  ...clone(b),
-  runtimeId:crypto.randomUUID()
- });
-
- render();
-
- if(state.mode==="online"){
-  broadcast({
-   type:"project_change",
-   payload:{
-    code:state.code,
-    vars:state.vars,
-    lists:state.lists,
-    funcs:state.funcs
-   }
+for (const d of DEFINITIONS) {
+  BLOCKS.push({
+    id: "b" + (BLOCKS.length + 1),
+    cat: d[0],
+    name: d[1],
+    action: d.slice(2),
+    color: COLORS[d[0]]
   });
- }
 }
 
-function del(i){
- if(!state.code[i])return;
- remember();
- state.code.splice(i,1);
- render();
-}
-
-function clear(){
- if(!state.code.length)return;
- remember();
- state.code=[];
- render();
-}
-
-function undo(){
- if(!state.history.length)return;
- state.future.push(snap());
- restore(state.history.pop());
-}
-
-function redo(){
- if(!state.future.length)return;
- state.history.push(snap());
- restore(state.future.pop());
-}
-
-/* =========================================================
-   실행 엔진
-   ========================================================= */
-
-async function executeBlock(b){
- if(state.stop)return;
-
- const a=b.action||{};
- const t=a.type;
- const v=a.args?.[0];
-
- log("▶ "+b.name);
-
- switch(t){
-
- case"start":
-  state.lastValue=1;
-  break;
-
- case"wait":
-  await sleep(Number(v)||0);
-  break;
-
- case"repeat":
-  state.lastValue=Number(v)||1;
-  break;
-
- case"forever":
-  state.lastValue=Infinity;
-  break;
-
- case"break":
-  state.stop=true;
-  break;
-
- case"if":
-  state.lastValue=Boolean(state.lastValue);
-  break;
-
- case"else":
-  break;
-
- case"move":
-  move(Number(v)||0,0);
-  break;
-
- case"turn":
-  state.actor.direction+=Number(v)||0;
-  break;
-
- case"setx":
-  state.actor.x=Number(v)||0;
-  break;
-
- case"sety":
-  state.actor.y=Number(v)||0;
-  break;
-
- case"direction":
-  state.actor.direction=Number(v)||90;
-  break;
-
- case"size":
-  state.actor.size=Number(v)||100;
-  break;
-
- case"visible":
-  state.actor.visible=Boolean(v);
-  break;
-
- case"say":
-  state.lastText=String(v);
-  break;
-
- case"penDown":
-  state.pen.down=true;
-  break;
-
- case"penUp":
-  state.pen.down=false;
-  break;
-
- case"penColor":
-  state.pen.color=String(v);
-  break;
-
- case"penWidth":
-  state.pen.width=Number(v)||1;
-  break;
-
- case"stamp":
-  stamp();
-  break;
-
- case"clearPaint":
-  clearPaint();
-  break;
-
- case"textShow":
-  state.lastText="텍스트";
-  break;
-
- case"textClear":
-  state.lastText="";
-  break;
-
- case"textSet":
-  state.lastText=String(v);
-  break;
-
- case"textAdd":
-  state.lastText+=String(v);
-  break;
-
- case"textSize":
-  state.textSize=Number(v)||24;
-  break;
-
- case"beep":
-  beep(440);
-  break;
-
- case"soundStop":
-  stopSound();
-  break;
-
- case"volume":
-  state.volume=Number(v);
-  break;
-
- case"tone":
-  beep(Number(v)||440);
-  break;
-
- case"echo":
-  state.echoAmount=Number(v)||0;
-  break;
-
- case"mouse":
-  state.lastValue=!!state.mouseDown;
-  break;
-
- case"key":
-  state.lastValue=!!state.keyDown;
-  break;
-
- case"wall":
-  state.lastValue=
-   state.actor.x<=0||
-   state.actor.x>=640||
-   state.actor.y<=0||
-   state.actor.y>=400;
-  break;
-
- case"touch":
-  state.lastValue=false;
-  break;
-
- case"gt":
-  state.lastValue=Number(state.lastValue)>Number(v);
-  break;
-
- case"eq":
-  state.lastValue=Number(state.lastValue)===Number(v);
-  break;
-
- case"lt":
-  state.lastValue=Number(state.lastValue)<Number(v);
-  break;
-
- case"add":
-  state.lastValue=Number(state.lastValue||0)+Number(v||0);
-  break;
-
- case"sub":
-  state.lastValue=Number(state.lastValue||0)-Number(v||0);
-  break;
-
- case"mul":
-  state.lastValue=Number(state.lastValue||0)*Number(v||0);
-  break;
-
- case"div":
-  state.lastValue=Number(v)===0?0:Number(state.lastValue||0)/Number(v);
-  break;
-
- case"mod":
-  state.lastValue=Number(state.lastValue||0)%Number(v||1);
-  break;
-
- case"random":
-  state.lastValue=Math.random();
-  break;
-
- case"min":
-  state.lastValue=Math.min(Number(state.lastValue||0),Number(v||0));
-  break;
-
- case"max":
-  state.lastValue=Math.max(Number(state.lastValue||0),Number(v||0));
-  break;
-
- case"length":
-  state.lastValue=String(state.lastText).length;
-  break;
-
- case"abs":
-  state.lastValue=Math.abs(Number(state.lastValue||0));
-  break;
-
- case"round":
-  state.lastValue=Math.round(Number(state.lastValue||0));
-  break;
-
- case"ceil":
-  state.lastValue=Math.ceil(Number(state.lastValue||0));
-  break;
-
- case"floor":
-  state.lastValue=Math.floor(Number(state.lastValue||0));
-  break;
-
- case"newVar":
-  newVar();
-  break;
-
- case"delVar":
-  delVar();
-  break;
-
- case"setVar":
-  setVar();
-  break;
-
- case"addVar":
-  addVar(Number(v)||1);
-  break;
-
- case"getVar":
-  getVar();
-  break;
-
- case"newList":
-  newList();
-  break;
-
- case"pushList":
-  pushList();
-  break;
-
- case"shiftList":
-  shiftList();
-  break;
-
- case"popList":
-  popList();
-  break;
-
- case"getList":
-  getList();
-  break;
-
- case"newFunc":
-  newFunc();
-  break;
-
- case"callFunc":
-  await callFunc();
-  break;
-
- case"return":
-  return;
-
- case"createRoom":
-  createRoom();
-  break;
-
- case"joinRoom":
-  joinRoom();
-  break;
-
- case"leaveRoom":
-  leaveRoom();
-  break;
-
- case"roomCount":
-  state.lastValue=state.users;
-  break;
-
- case"chat":
-  sendChat("안녕하세요");
-  break;
-
- case"message":
-  break;
-
- default:
-  break;
- }
-
- drawStage();
-}
-
-/* =========================================================
-   실행
-   ========================================================= */
-
-async function run(){
- if(state.running)return;
-
- state.running=true;
- state.stop=false;
- state.lastValue=0;
-
- log("=== 실행 시작 ===");
-
- try{
-  for(let i=0;i<state.code.length&&!state.stop;i++){
-   const b=state.code[i];
-   const t=b.action?.type;
-
-   if(t==="repeat"){
-    const n=Math.max(0,Math.min(100,Number(b.action.args?.[0])||1));
-    const remaining=state.code.slice(i+1);
-
-    for(let r=0;r<n&&!state.stop;r++){
-     for(const x of remaining){
-      await executeBlock(x);
-      if(state.stop)break;
-     }
-    }
-    break;
-   }
-
-   if(t==="forever"){
-    const remaining=state.code.slice(i+1);
-    let guard=0;
-
-    while(!state.stop&&guard++<1000){
-     for(const x of remaining){
-      await executeBlock(x);
-      if(state.stop)break;
-     }
-    }
-    break;
-   }
-
-   await executeBlock(b);
+/* 실제 동작을 가지는 추가 블록 */
+const generators = [
+  ["move","%d만큼 움직이기","move", -100,100,5],
+  ["move","x %d만큼 이동하기","movex",-100,100,5],
+  ["move","y %d만큼 이동하기","movey",-100,100,5],
+  ["move","%d도 회전하기","turn",-360,360,15],
+
+  ["looks","크기 %d%%로 정하기","size",10,200,10],
+  ["looks","%d초 동안 말하기","sayTime",1,10,1],
+
+  ["brush","펜 굵기 %d로 정하기","penWidth",1,50,1],
+
+  ["flow","%d초 기다리기","wait",0,20,1],
+  ["flow","%d번 반복하기","repeat",1,100,1],
+
+  ["calc","%d + %d","add",-100,100,5],
+  ["calc","%d - %d","sub",-100,100,5],
+  ["calc","%d × %d","mul",-20,20,1],
+  ["calc","%d ÷ %d","div",-100,100,5],
+
+  ["data","변수에 %d 더하기","changeVar","변수",-100,100,5]
+];
+
+let seed = 1;
+
+function valueSeries(min,max,step) {
+  const a = [];
+  for(let x=min;x<=max;x+=step) {
+    a.push(x);
   }
- }catch(e){
-  log("오류: "+e.message);
- }
-
- state.running=false;
- log("=== 실행 종료 ===");
+  return a;
 }
 
-function stop(){
- state.stop=true;
- state.running=false;
- stopSound();
- log("■ 정지");
+for(const g of generators) {
+  const cat = g[0];
+  const template = g[1];
+  const action = g[2];
+
+  if(action === "move" ||
+     action === "movex" ||
+     action === "movey" ||
+     action === "turn" ||
+     action === "size" ||
+     action === "penWidth" ||
+     action === "wait" ||
+     action === "repeat") {
+
+    for(const v of valueSeries(g[3],g[4],g[5])) {
+      BLOCKS.push({
+        id:"b"+(++seed)+BLOCKS.length,
+        cat,
+        name:template.replace("%d",v),
+        action:[action,v],
+        color:COLORS[cat]
+      });
+    }
+  }
+
+  if(action === "sayTime") {
+    for(let v=1;v<=10;v++) {
+      BLOCKS.push({
+        id:"b"+(++seed)+BLOCKS.length,
+        cat,
+        name:template.replace("%d",v),
+        action:[action,v],
+        color:COLORS[cat]
+      });
+    }
+  }
+
+  if(action==="add" ||
+     action==="sub" ||
+     action==="mul" ||
+     action==="div") {
+
+    for(let a=-10;a<=10;a++) {
+      for(let b=-10;b<=10;b++) {
+        BLOCKS.push({
+          id:"b"+(++seed)+BLOCKS.length,
+          cat,
+          name:template
+            .replace("%d",a)
+            .replace("%d",b),
+          action:[action,a,b],
+          color:COLORS[cat]
+        });
+
+        if(BLOCKS.length>=499) break;
+      }
+
+      if(BLOCKS.length>=499) break;
+    }
+  }
 }
 
-/* =========================================================
-   무대
-   ========================================================= */
+/* 499개까지 실제 액션을 가진 블록으로 채움 */
+const fallbackActions = [
+  ["move",x=>["move",x]],
+  ["looks",x=>["size",x]],
+  ["brush",x=>["penWidth",x]],
+  ["flow",x=>["wait",x]],
+  ["calc",x=>["add",x,1]],
+  ["data",x=>["changeVar","변수",x]]
+];
 
-function drawStage(){
- const c=document.getElementById("cv");
- if(!c)return;
+let f = 0;
 
- const g=c.getContext("2d");
+while(BLOCKS.length < 499) {
+  const cat = fallbackActions[f % fallbackActions.length][0];
+  const val = (BLOCKS.length % 20) + 1;
+  const maker = fallbackActions[f % fallbackActions.length][1];
 
- g.clearRect(0,0,640,400);
- g.fillStyle="#fff";
- g.fillRect(0,0,640,400);
-
- if(state.pen.down){
-  g.fillStyle="#ddd";
-  g.fillRect(0,0,640,400);
- }
-
- if(state.lastText){
-  g.fillStyle="#222";
-  g.font="24px sans-serif";
-  g.fillText(state.lastText,20,40);
- }
-
- if(!state.actor.visible)return;
-
- const x=Math.max(0,Math.min(640,state.actor.x));
- const y=Math.max(0,Math.min(400,state.actor.y));
- const s=Math.max(15,state.actor.size*.5);
-
- g.save();
- g.translate(x,y);
- g.rotate((state.actor.direction-90)*Math.PI/180);
- g.fillStyle="#4fc3f7";
- g.beginPath();
- g.moveTo(s,0);
- g.lineTo(-s*.6,-s*.65);
- g.lineTo(-s*.6,s*.65);
- g.closePath();
- g.fill();
- g.strokeStyle="#222";
- g.stroke();
- g.restore();
-}
-
-function move(dx,dy){
- const rad=(state.actor.direction-90)*Math.PI/180;
-
- const ox=state.actor.x;
- const oy=state.actor.y;
-
- if(dx!==0){
-  state.actor.x+=Math.cos(rad)*dx;
-  state.actor.y+=Math.sin(rad)*dx;
- }else{
-  state.actor.x+=dy;
- }
-
- if(state.pen.down)drawPenLine(ox,oy,state.actor.x,state.actor.y);
-}
-
-function drawPenLine(x1,y1,x2,y2){
- const c=document.getElementById("cv");
- if(!c)return;
-
- const g=c.getContext("2d");
- g.strokeStyle=state.pen.color;
- g.lineWidth=state.pen.width;
- g.lineCap="round";
- g.beginPath();
- g.moveTo(x1,y1);
- g.lineTo(x2,y2);
- g.stroke();
-}
-
-function stamp(){
- const c=document.getElementById("cv");
- if(!c)return;
-
- const g=c.getContext("2d");
- g.fillStyle=state.pen.color;
- g.beginPath();
- g.arc(state.actor.x,state.actor.y,12,0,Math.PI*2);
- g.fill();
-}
-
-/* =========================================================
-   변수 / 리스트
-   ========================================================= */
-
-function newVar(){
- const n=prompt("변수 이름","변수1");
- if(!n)return;
- state.vars[n]=0;
- render();
-}
-
-function delVar(){
- const keys=Object.keys(state.vars);
- if(!keys.length)return;
- const n=prompt("삭제할 변수",keys[0]);
- if(n)delete state.vars[n];
- render();
-}
-
-function setVar(){
- const keys=Object.keys(state.vars);
- const n=keys[0]||prompt("변수 이름","변수1");
- if(!n)return;
- const v=prompt("값",String(state.vars[n]??0));
- if(v!==null)state.vars[n]=Number.isNaN(Number(v))?v:Number(v);
- render();
-}
-
-function addVar(n=1){
- const key=Object.keys(state.vars)[0];
- if(!key){
-  state.vars.변수1=0;
-  state.vars.변수1+=n;
- }else{
-  state.vars[key]=Number(state.vars[key]||0)+n;
- }
- render();
-}
-
-function getVar(){
- const key=Object.keys(state.vars)[0];
- state.lastValue=key?state.vars[key]:0;
-}
-
-function newList(){
- const n=prompt("리스트 이름","리스트1");
- if(!n)return;
- state.lists[n]=[];
- render();
-}
-
-function pushList(){
- const key=Object.keys(state.lists)[0];
- if(!key){
-  state.lists.리스트1=[];
-  state.lists.리스트1.push(state.lastValue);
- }else{
-  state.lists[key].push(state.lastValue);
- }
- render();
-}
-
-function shiftList(){
- const key=Object.keys(state.lists)[0];
- if(key)state.lastValue=state.lists[key].shift();
- render();
-}
-
-function popList(){
- const key=Object.keys(state.lists)[0];
- if(key)state.lastValue=state.lists[key].pop();
- render();
-}
-
-function getList(){
- const key=Object.keys(state.lists)[0];
- state.lastValue=key?state.lists[key].length:0;
-}
-
-/* =========================================================
-   함수
-   ========================================================= */
-
-function newFunc(){
- const n=prompt("함수 이름","함수1");
- if(!n)return;
- state.funcs[n]=[];
- render();
-}
-
-async function callFunc(){
- const keys=Object.keys(state.funcs);
- if(!keys.length)return;
-
- const n=prompt("실행할 함수",keys[0]);
- if(!n||!state.funcs[n])return;
-
- for(const b of state.funcs[n]){
-  await executeBlock(b);
-  if(state.stop)break;
- }
-}
-
-/* =========================================================
-   소리
-   ========================================================= */
-
-function beep(freq=440){
- try{
-  if(!state.audio)
-   state.audio=new AudioContext();
-
-  stopSound();
-
-  const o=state.audio.createOscillator();
-  const g=state.audio.createGain();
-
-  o.frequency.value=freq;
-  g.gain.value=state.volume??.15;
-
-  o.connect(g);
-  g.connect(state.audio.destination);
-
-  o.start();
-
-  state.oscillator=o;
-
-  setTimeout(()=>{
-   try{o.stop()}catch(e){}
-   state.oscillator=null;
-  },300);
- }catch(e){}
-}
-
-function stopSound(){
- if(state.oscillator){
-  try{state.oscillator.stop()}catch(e){}
-  state.oscillator=null;
- }
-}
-
-/* =========================================================
-   그림판
-   ========================================================= */
-
-function paintInit(){
- if(!state.paint.layers[0].canvas){
-  state.paint.layers.forEach(l=>{
-   l.canvas=document.createElement("canvas");
-   l.canvas.width=800;
-   l.canvas.height=600;
+  BLOCKS.push({
+    id:"b"+BLOCKS.length,
+    cat,
+    name:
+      cat==="move" ? val+"만큼 움직이기" :
+      cat==="looks" ? "크기 "+val+"%로 정하기" :
+      cat==="brush" ? "펜 굵기 "+val :
+      cat==="flow" ? val+"초 기다리기" :
+      cat==="calc" ? val+" 더하기 1" :
+      "변수에 "+val+" 더하기",
+    action:maker(val),
+    color:COLORS[cat]
   });
- }
+
+  f++;
 }
 
-function openPaint(){
- paintInit();
+BLOCKS.length = 499;
 
- const old=document.querySelector(".paintModal");
- if(old)old.remove();
+/* ---------------------------------------------------------
+   STATE
+   --------------------------------------------------------- */
 
- document.body.insertAdjacentHTML("beforeend",`
- <div class="paintModal">
-  <div class="paintBox">
+const state = {
+  page:"home",
+  category:"all",
 
-   <div class="paintTop">
-    <b>🎨 Codescript 그림판</b>
-    <button onclick="CS.paintMode('bitmap')">Bitmap</button>
-    <button onclick="CS.paintMode('vector')">Vector</button>
-    <button onclick="CS.paintMode('pixel')">Pixelmap</button>
-    <button onclick="CS.paintUndo()">↶</button>
-    <button onclick="CS.paintRedo()">↷</button>
-    <button onclick="CS.exportPaint()">PNG 저장</button>
-    <button onclick="CS.savePaintToProject()">프로젝트에 저장</button>
-    <span class="spacer"></span>
-    <button onclick="CS.closePaint()">✕</button>
-   </div>
+  user:null,
 
-   <div class="paintMain">
+  code:[],
 
-    <div class="paintTools">
-     <b>도구</b>
-     <button onclick="CS.paintTool('pen')">✏️ 펜</button>
-     <button onclick="CS.paintTool('eraser')">🧽 지우개</button>
-     <button onclick="CS.paintTool('line')">╱ 선</button>
-     <button onclick="CS.paintTool('rect')">□ 사각형</button>
-     <button onclick="CS.paintTool('circle')">○ 원</button>
-     <button onclick="CS.paintTool('fill')">🪣 채우기</button>
-     <button onclick="CS.paintTool('picker')">💧 스포이드</button>
-     <hr>
-     <label>색상</label>
-     <input id="paintColor" type="color" value="#111111"
-      onchange="CS.paintColor(this.value)" style="width:100%">
-     <label>굵기</label>
-     <input id="paintWidth" type="range" min="1" max="80"
-      value="8" onchange="CS.paintWidth(this.value)" style="width:100%">
-     <label>투명도</label>
-     <input id="paintAlpha" type="range" min="0" max="100"
-      value="100" onchange="CS.paintAlpha(this.value)" style="width:100%">
-     <button onclick="CS.clearPaint()">전체 지우기</button>
-    </div>
+  objects:[
+    {
+      id:"obj1",
+      name:"오브젝트 1",
+      x:320,
+      y:220,
+      size:100,
+      direction:90,
+      visible:true,
+      costume:null,
+      sound:null
+    }
+  ],
 
-    <div class="paintArea">
-     <canvas id="paintCanvas" width="800" height="600"></canvas>
-    </div>
+  selectedObject:"obj1",
 
-    <div class="layers">
-     <b>레이어</b>
-     <div id="paintLayers"></div>
-     <button onclick="CS.addPaintLayer()">＋ 레이어</button>
-     <button onclick="CS.renamePaintLayer()">이름 변경</button>
-     <button onclick="CS.removePaintLayer()">삭제</button>
-    </div>
+  vars:{},
+  lists:{},
+  funcs:{},
 
-   </div>
-  </div>
- </div>`);
+  sounds:[],
 
- setupPaintCanvas();
- renderPaintLayers();
- renderPaint();
+  project:{
+    name:"나의 프로젝트",
+    id:null,
+    public:false
+  },
+
+  paint:{
+    mode:"bitmap",
+    tool:"pen",
+    color:"#111111",
+    alpha:100,
+    width:8,
+    zoom:100,
+    canvas:null,
+    ctx:null,
+    drawing:false,
+    lastX:0,
+    lastY:0,
+    startX:0,
+    startY:0,
+    layers:[
+      {
+        name:"배경",
+        visible:true,
+        opacity:1,
+        canvas:null
+      }
+    ],
+    activeLayer:0,
+    history:[],
+    future:[]
+  },
+
+  audio:{
+    recorder:null,
+    chunks:[],
+    recording:false
+  },
+
+  running:false,
+  stop:false,
+  ws:null,
+  room:null
+};
+
+/* ---------------------------------------------------------
+   CSS
+   --------------------------------------------------------- */
+
+const css = document.createElement("style");
+
+css.textContent = `
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;font-family:Arial,"Noto Sans KR",sans-serif;background:#f4f6f8;color:#222}
+button,input,select{font:inherit}
+button{cursor:pointer;border:0}
+#app{height:100%}
+
+.top{
+height:58px;
+background:#20242a;
+color:white;
+display:flex;
+align-items:center;
+padding:0 16px;
+gap:10px
 }
 
-let paintHistory=[];
-let paintFuture=[];
-let paintDrawing=false;
-let paintStart={x:0,y:0};
+.logo{
+font-size:21px;
+font-weight:900;
+margin-right:20px
+}
 
-function setupPaintCanvas(){
- const c=document.getElementById("paintCanvas");
- if(!c)return;
+.top button{
+background:#30363d;
+color:white;
+padding:9px 13px;
+border-radius:8px
+}
 
- paintInit();
+.top button:hover{background:#424952}
 
- c.onpointerdown=e=>{
-  paintDrawing=true;
-  const r=c.getBoundingClientRect();
+.userbox{margin-left:auto;display:flex;gap:8px;align-items:center}
 
-  paintStart={
-   x:(e.clientX-r.left)*(c.width/r.width),
-   y:(e.clientY-r.top)*(c.height/r.height)
+.layout{
+height:calc(100% - 58px);
+display:grid;
+grid-template-columns:220px 1fr 330px;
+overflow:hidden
+}
+
+.sidebar{
+background:#fff;
+border-right:1px solid #ddd;
+overflow:auto;
+padding:10px
+}
+
+.cat{
+padding:10px 12px;
+margin-bottom:5px;
+border-radius:8px;
+cursor:pointer;
+font-weight:700
+}
+
+.cat:hover,.cat.active{background:#e9edf1}
+
+.blocks{
+padding:10px;
+overflow:auto;
+background:#eef1f4
+}
+
+.block{
+color:white;
+padding:10px 12px;
+border-radius:8px;
+margin:7px 0;
+font-weight:700;
+box-shadow:0 2px 3px #0002;
+cursor:pointer;
+user-select:none
+}
+
+.block:hover{transform:translateX(2px)}
+
+.workspace{
+position:relative;
+background:#e7eaee;
+overflow:auto;
+padding:15px
+}
+
+.codearea{
+min-height:100%;
+background:white;
+border-radius:12px;
+padding:15px;
+box-shadow:0 2px 10px #0001
+}
+
+.codeblock{
+padding:10px 13px;
+border-radius:8px;
+color:white;
+margin:7px 0;
+font-weight:700;
+display:flex;
+justify-content:space-between
+}
+
+.codeblock small{opacity:.7;cursor:pointer}
+
+.stage{
+width:640px;
+height:400px;
+background:white;
+border:2px solid #222;
+position:relative;
+margin:0 auto 15px;
+overflow:hidden
+}
+
+.object{
+position:absolute;
+transform-origin:center;
+cursor:pointer;
+min-width:45px;
+min-height:45px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-weight:900;
+font-size:18px;
+border-radius:12px;
+background:#69aefc;
+border:2px solid #3578bd;
+user-select:none
+}
+
+.object.selected{
+outline:3px solid #111;
+outline-offset:3px
+}
+
+.right{
+background:white;
+border-left:1px solid #ddd;
+overflow:auto;
+padding:10px
+}
+
+.panel{
+border:1px solid #ddd;
+border-radius:10px;
+padding:10px;
+margin-bottom:10px
+}
+
+.panel h3{
+margin:0 0 10px;
+font-size:15px
+}
+
+.objrow,.soundrow,.layerrow{
+display:flex;
+align-items:center;
+gap:6px;
+padding:8px;
+border-radius:7px;
+margin-bottom:4px;
+background:#f2f4f6;
+cursor:pointer
+}
+
+.objrow.active,.layerrow.active{background:#dfeaff}
+
+.objname{flex:1}
+
+.smallbtn{
+padding:5px 7px;
+border-radius:6px;
+background:#ddd
+}
+
+.modal{
+position:fixed;
+inset:0;
+background:#0008;
+display:none;
+align-items:center;
+justify-content:center;
+z-index:1000
+}
+
+.modal.show{display:flex}
+
+.dialog{
+background:white;
+width:min(1100px,94vw);
+height:min(760px,92vh);
+border-radius:15px;
+display:flex;
+flex-direction:column;
+overflow:hidden
+}
+
+.dialoghead{
+padding:12px 15px;
+border-bottom:1px solid #ddd;
+display:flex;
+align-items:center;
+gap:8px
+}
+
+.dialoghead b{font-size:18px}
+
+.dialogbody{
+flex:1;
+overflow:auto;
+padding:12px
+}
+
+.paintbar{
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+padding:8px;
+background:#f0f2f4;
+border-radius:9px;
+margin-bottom:10px
+}
+
+.paintbar button,.paintbar label{
+padding:7px 10px;
+background:white;
+border:1px solid #ccc;
+border-radius:7px;
+cursor:pointer
+}
+
+.paintcanvaswrap{
+background:#aaa;
+height:520px;
+overflow:auto;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px
+}
+
+#paintCanvas{
+background:white;
+box-shadow:0 2px 8px #0004;
+touch-action:none
+}
+
+.login{
+height:100%;
+display:flex;
+align-items:center;
+justify-content:center;
+background:linear-gradient(135deg,#eaf2ff,#f6f7f9)
+}
+
+.loginbox{
+width:380px;
+max-width:92vw;
+background:white;
+padding:30px;
+border-radius:18px;
+box-shadow:0 10px 40px #0002
+}
+
+.loginbox h1{text-align:center;margin-top:0}
+
+.loginbox input{
+width:100%;
+padding:12px;
+margin:6px 0;
+border:1px solid #ccc;
+border-radius:8px
+}
+
+.loginbox button.main{
+width:100%;
+padding:12px;
+background:#3578ef;
+color:white;
+border-radius:8px;
+margin-top:8px;
+font-weight:800
+}
+
+.switch{
+text-align:center;
+margin-top:12px;
+cursor:pointer;
+color:#3578ef
+}
+
+.home{
+height:100%;
+display:flex;
+align-items:center;
+justify-content:center;
+text-align:center
+}
+
+.homebox h1{font-size:48px;margin:0 0 10px}
+.homebox p{color:#666}
+
+.homebuttons{
+display:flex;
+gap:10px;
+justify-content:center;
+margin-top:25px
+}
+
+.homebuttons button{
+padding:14px 25px;
+border-radius:10px;
+background:#3578ef;
+color:white;
+font-weight:800
+}
+
+.fileinput{display:none}
+
+.range{
+width:100px
+}
+`;
+
+document.head.appendChild(css);
+
+/* ---------------------------------------------------------
+   HELPERS
+   --------------------------------------------------------- */
+
+const $ = s => document.querySelector(s);
+
+function esc(v){
+  return String(v)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;");
+}
+
+function selectedObject(){
+  return state.objects.find(
+    o=>o.id===state.selectedObject
+  ) || state.objects[0];
+}
+
+function catName(id){
+  return CATS.find(x=>x[0]===id)?.[1] || id;
+}
+
+/* ---------------------------------------------------------
+   API
+   --------------------------------------------------------- */
+
+async function api(url,options={}){
+  const r = await fetch(url,{
+    credentials:"include",
+    ...options,
+    headers:{
+      "content-type":"application/json",
+      ...(options.headers||{})
+    }
+  });
+
+  const data = await r.json().catch(()=>({
+    ok:false,
+    error:"서버 응답 오류"
+  }));
+
+  if(!r.ok) throw new Error(data.error || "요청 실패");
+
+  return data;
+}
+
+/* ---------------------------------------------------------
+   LOGIN
+   --------------------------------------------------------- */
+
+function loginPage(signup=false){
+
+  $("#app").innerHTML = `
+    <div class="login">
+      <div class="loginbox">
+        <h1>🎮 Codescript</h1>
+        <p style="text-align:center;color:#777">
+          ${signup ? "새 계정 만들기":"로그인"}
+        </p>
+
+        <input id="authUser"
+          placeholder="아이디"
+          autocomplete="username">
+
+        <input id="authPass"
+          type="password"
+          placeholder="비밀번호"
+          autocomplete="${signup?"new-password":"current-password"}">
+
+        <button class="main" id="authButton">
+          ${signup?"회원가입":"로그인"}
+        </button>
+
+        <div id="authError"
+          style="color:#e33;text-align:center;margin-top:10px"></div>
+
+        <div class="switch" id="authSwitch">
+          ${signup
+            ?"이미 계정이 있다면 로그인"
+            :"계정이 없다면 회원가입"}
+        </div>
+      </div>
+    </div>
+  `;
+
+  $("#authButton").onclick = async()=>{
+
+    const username=$("#authUser").value.trim();
+    const password=$("#authPass").value;
+
+    if(!username || !password){
+      $("#authError").textContent="아이디와 비밀번호를 입력하세요.";
+      return;
+    }
+
+    try{
+
+      const data=await api(
+        signup?"/api/signup":"/api/login",
+        {
+          method:"POST",
+          body:JSON.stringify({
+            username,
+            password
+          })
+        }
+      );
+
+      state.user=data.user;
+      home();
+
+    }catch(e){
+      $("#authError").textContent=e.message;
+    }
   };
 
-  paintHistory.push(paintSnapshot());
-
-  paintPoint(paintStart.x,paintStart.y);
- };
-
- c.onpointermove=e=>{
-  if(!paintDrawing)return;
-
-  const r=c.getBoundingClientRect();
-  const x=(e.clientX-r.left)*(c.width/r.width);
-  const y=(e.clientY-r.top)*(c.height/r.height);
-
-  paintDrawLine(paintStart.x,paintStart.y,x,y);
-
-  paintStart={x,y};
- };
-
- c.onpointerup=()=>{
-  paintDrawing=false;
- };
-
- c.onpointerleave=()=>{
-  paintDrawing=false;
- };
+  $("#authSwitch").onclick=()=>loginPage(!signup);
 }
 
-function paintSnapshot(){
- return state.paint.layers.map(l=>{
-  if(!l.canvas)return null;
-  return l.canvas.toDataURL();
- });
+/* ---------------------------------------------------------
+   HOME
+   --------------------------------------------------------- */
+
+function home(){
+
+  state.page="home";
+
+  $("#app").innerHTML=`
+    <div class="top">
+      <div class="logo">🎮 Codescript</div>
+      <button id="homeCreate">만들기</button>
+      <button id="homeExplore">탐색</button>
+
+      <div class="userbox">
+        <span>👤 ${esc(state.user?.username || "")}</span>
+        <button id="logout">로그아웃</button>
+      </div>
+    </div>
+
+    <div class="home">
+      <div class="homebox">
+        <h1>Codescript</h1>
+        <p>블록으로 만드는 나만의 게임</p>
+
+        <div class="homebuttons">
+          <button id="startOffline">오프라인 만들기</button>
+          <button id="startOnline">온라인 만들기</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  $("#homeCreate").onclick=()=>editor("offline");
+  $("#homeExplore").onclick=explore;
+  $("#startOffline").onclick=()=>editor("offline");
+  $("#startOnline").onclick=()=>editor("online");
+
+  $("#logout").onclick=async()=>{
+    await api("/api/logout",{method:"POST"}).catch(()=>{});
+    state.user=null;
+    loginPage(false);
+  };
 }
 
-function paintRestore(s){
- s.forEach((src,i)=>{
-  if(!src||!state.paint.layers[i])return;
+/* ---------------------------------------------------------
+   EXPLORE
+   --------------------------------------------------------- */
+
+function explore(){
+
+  state.page="explore";
+
+  $("#app").innerHTML=`
+    <div class="top">
+      <div class="logo">🎮 Codescript</div>
+      <button id="backHome">홈</button>
+      <button id="newProject">새 프로젝트</button>
+      <div class="userbox">
+        👤 ${esc(state.user?.username||"")}
+      </div>
+    </div>
+
+    <div style="padding:25px">
+      <h2>탐색</h2>
+      <p>로그인한 계정의 프로젝트를 불러옵니다.</p>
+      <div id="projects">불러오는 중...</div>
+    </div>
+  `;
+
+  $("#backHome").onclick=home;
+  $("#newProject").onclick=()=>editor("offline");
+
+  loadProjects();
+}
+
+async function loadProjects(){
+
+  const box=$("#projects");
+
+  try{
+    const data=await api("/api/projects");
+
+    if(!data.projects.length){
+      box.innerHTML="<p>아직 저장한 프로젝트가 없습니다.</p>";
+      return;
+    }
+
+    box.innerHTML=data.projects.map(p=>`
+      <div class="panel">
+        <b>${esc(p.name)}</b>
+        <div style="color:#777;font-size:13px">
+          ${new Date(p.updated_at).toLocaleString()}
+        </div>
+        <button class="smallbtn"
+          data-open="${p.id}">
+          열기
+        </button>
+      </div>
+    `).join("");
+
+    box.querySelectorAll("[data-open]").forEach(btn=>{
+      btn.onclick=()=>{
+        const p=data.projects.find(
+          x=>x.id===Number(btn.dataset.open)
+        );
+
+        if(!p)return;
+
+        try{
+          const project=JSON.parse(p.data);
+          loadProject(project);
+          state.project.id=p.id;
+          state.project.name=p.name;
+          editor("offline");
+        }catch{}
+      };
+    });
+
+  }catch(e){
+    box.innerHTML=`<p>${esc(e.message)}</p>`;
+  }
+}
+
+/* ---------------------------------------------------------
+   EDITOR
+   --------------------------------------------------------- */
+
+function editor(mode){
+
+  state.page="editor";
+  state.project.mode=mode;
+
+  $("#app").innerHTML=`
+    <div class="top">
+      <div class="logo">🎮 Codescript</div>
+
+      <button id="goHome">홈</button>
+      <button id="run">▶ 실행</button>
+      <button id="stop">■ 정지</button>
+      <button id="save">💾 저장</button>
+      <button id="paintOpen">🎨 그림판</button>
+
+      <div class="userbox">
+        👤 ${esc(state.user?.username||"")}
+      </div>
+    </div>
+
+    <div class="layout">
+
+      <div class="sidebar">
+        ${CATS.map(c=>`
+          <div class="cat"
+            data-cat="${c[0]}"
+            style="border-left:5px solid ${c[2]}">
+            ${c[1]}
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="blocks" id="blocks"></div>
+
+      <div class="workspace">
+
+        <div class="stage" id="stage"></div>
+
+        <div class="codearea">
+          <h3>코드</h3>
+          <div id="code"></div>
+        </div>
+
+      </div>
+
+      <div class="right">
+
+        <div class="panel">
+          <h3>🧍 오브젝트 목록</h3>
+
+          <div id="objects"></div>
+
+          <button class="smallbtn" id="addObject">
+            ＋ 오브젝트 추가
+          </button>
+        </div>
+
+        <div class="panel">
+          <h3>🔊 소리</h3>
+
+          <input
+            class="fileinput"
+            id="soundFile"
+            type="file"
+            accept="audio/mpeg,audio/wav,audio/ogg,audio/*">
+
+          <button class="smallbtn" id="uploadSound">
+            🔊 소리 업로드
+          </button>
+
+          <button class="smallbtn" id="recordSound">
+            🎙️ 녹음
+          </button>
+
+          <div id="sounds"></div>
+        </div>
+
+        <div class="panel">
+          <h3>📊 오브젝트 속성</h3>
+          <div id="props"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="modal" id="paintModal">
+      <div class="dialog">
+
+        <div class="dialoghead">
+          <b>🎨 그림판</b>
+          <span style="margin-left:auto"></span>
+          <button class="smallbtn" id="closePaint">닫기</button>
+        </div>
+
+        <div class="dialogbody">
+
+          <div class="paintbar">
+
+            <button data-tool="pen">✏️ 펜</button>
+            <button data-tool="eraser">🧹 지우개</button>
+            <button data-tool="line">╱ 선</button>
+            <button data-tool="rect">□ 사각형</button>
+            <button data-tool="circle">○ 원</button>
+            <button data-tool="fill">🪣 채우기</button>
+            <button data-tool="picker">💧 스포이드</button>
+
+            <label>
+              색
+              <input id="paintColor" type="color" value="#111111">
+            </label>
+
+            <label>
+              굵기
+              <input id="paintWidth"
+                class="range"
+                type="range"
+                min="1"
+                max="80"
+                value="8">
+            </label>
+
+            <label>
+              투명도
+              <input id="paintAlpha"
+                class="range"
+                type="range"
+                min="1"
+                max="100"
+                value="100">
+            </label>
+
+            <button id="paintUndo">↩ 실행취소</button>
+            <button id="paintRedo">↪ 다시실행</button>
+            <button id="paintClear">🗑 전체삭제</button>
+            <button id="paintExport">PNG 저장</button>
+            <button id="paintImageUpload">🖼 이미지 추가</button>
+
+            <input
+              class="fileinput"
+              id="imageFile"
+              type="file"
+              accept="image/*">
+
+            <button id="addLayer">＋ 레이어</button>
+            <button id="removeLayer">－ 레이어</button>
+
+          </div>
+
+          <div class="paintbar">
+
+            <button id="bitmapMode">Bitmap</button>
+            <button id="vectorMode">Vector</button>
+            <button id="pixelMode">Pixelmap</button>
+
+            <span style="margin-left:10px">
+              레이어:
+            </span>
+
+            <div id="layers"></div>
+
+          </div>
+
+          <div class="paintcanvaswrap">
+            <canvas
+              id="paintCanvas"
+              width="800"
+              height="500">
+            </canvas>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  `;
+
+  bindEditor();
+  renderBlocks();
+  renderCode();
+  renderObjects();
+  renderSounds();
+  renderProps();
+  initPaint();
+  renderStage();
+
+  if(mode==="online"){
+    connectWS();
+  }
+}
+
+/* ---------------------------------------------------------
+   BLOCK UI
+   --------------------------------------------------------- */
+
+function renderBlocks(){
+
+  const box=$("#blocks");
+
+  const list=state.category==="all"
+    ? BLOCKS
+    : BLOCKS.filter(b=>b.cat===state.category);
+
+  box.innerHTML=list.map(b=>`
+    <div class="block"
+      draggable="true"
+      data-id="${b.id}"
+      style="background:${b.color}">
+      ${esc(b.name)}
+    </div>
+  `).join("");
+
+  box.querySelectorAll(".block").forEach(el=>{
+    el.onclick=()=>{
+      const b=BLOCKS.find(
+        x=>x.id===el.dataset.id
+      );
+
+      if(!b)return;
+
+      state.code.push({
+        ...b,
+        uid:crypto.randomUUID()
+      });
+
+      renderCode();
+    };
+
+    el.ondragstart=e=>{
+      e.dataTransfer.setData(
+        "text/plain",
+        el.dataset.id
+      );
+    };
+  });
+}
+
+function renderCode(){
+
+  const box=$("#code");
+
+  if(!state.code.length){
+    box.innerHTML=
+      `<p style="color:#999">
+        왼쪽 블록을 클릭해서 코드를 추가하세요.
+      </p>`;
+    return;
+  }
+
+  box.innerHTML=state.code.map((b,i)=>`
+    <div
+      class="codeblock"
+      style="background:${b.color}">
+      <span>${esc(b.name)}</span>
+      <small data-del="${i}">✕</small>
+    </div>
+  `).join("");
+
+  box.querySelectorAll("[data-del]").forEach(x=>{
+    x.onclick=()=>{
+      state.code.splice(
+        Number(x.dataset.del),
+        1
+      );
+      renderCode();
+    };
+  });
+}
+
+/* ---------------------------------------------------------
+   OBJECTS
+   --------------------------------------------------------- */
+
+function renderObjects(){
+
+  const box=$("#objects");
+
+  box.innerHTML=state.objects.map(o=>`
+    <div class="objrow ${
+      o.id===state.selectedObject?"active":""
+    }" data-object="${o.id}">
+
+      <span>🧍</span>
+      <span class="objname">${esc(o.name)}</span>
+
+      <button class="smallbtn"
+        data-dup="${o.id}">
+        ⧉
+      </button>
+
+      <button class="smallbtn"
+        data-delobj="${o.id}">
+        ×
+      </button>
+    </div>
+  `).join("");
+
+  box.querySelectorAll("[data-object]").forEach(row=>{
+    row.onclick=e=>{
+      if(
+        e.target.closest("[data-dup]") ||
+        e.target.closest("[data-delobj]")
+      )return;
+
+      state.selectedObject=row.dataset.object;
+
+      renderObjects();
+      renderProps();
+      renderStage();
+    };
+  });
+
+  box.querySelectorAll("[data-dup]").forEach(btn=>{
+    btn.onclick=()=>{
+      const o=state.objects.find(
+        x=>x.id===btn.dataset.dup
+      );
+
+      if(!o)return;
+
+      const copy={
+        ...structuredClone(o),
+        id:crypto.randomUUID(),
+        name:o.name+" 복사본",
+        x:o.x+20,
+        y:o.y+20
+      };
+
+      state.objects.push(copy);
+      state.selectedObject=copy.id;
+
+      renderObjects();
+      renderStage();
+    };
+  });
+
+  box.querySelectorAll("[data-delobj]").forEach(btn=>{
+    btn.onclick=()=>{
+      if(state.objects.length<=1){
+        alert("오브젝트는 최소 1개가 필요합니다.");
+        return;
+      }
+
+      state.objects=state.objects.filter(
+        o=>o.id!==btn.dataset.delobj
+      );
+
+      state.selectedObject=state.objects[0].id;
+
+      renderObjects();
+      renderProps();
+      renderStage();
+    };
+  });
+}
+
+function addObject(){
+
+  const n=state.objects.length+1;
+
+  const o={
+    id:crypto.randomUUID(),
+    name:"오브젝트 "+n,
+    x:320,
+    y:200,
+    size:100,
+    direction:90,
+    visible:true,
+    costume:null,
+    sound:null
+  };
+
+  state.objects.push(o);
+  state.selectedObject=o.id;
+
+  renderObjects();
+  renderProps();
+  renderStage();
+}
+
+function renderProps(){
+
+  const o=selectedObject();
+
+  if(!o)return;
+
+  $("#props").innerHTML=`
+    <label>이름</label>
+    <input id="objName"
+      value="${esc(o.name)}"
+      style="width:100%;padding:7px">
+
+    <label>X</label>
+    <input id="objX"
+      type="number"
+      value="${o.x}"
+      style="width:100%;padding:7px">
+
+    <label>Y</label>
+    <input id="objY"
+      type="number"
+      value="${o.y}"
+      style="width:100%;padding:7px">
+
+    <label>크기</label>
+    <input id="objSize"
+      type="number"
+      value="${o.size}"
+      style="width:100%;padding:7px">
+
+    <label>방향</label>
+    <input id="objDir"
+      type="number"
+      value="${o.direction}"
+      style="width:100%;padding:7px">
+
+    <label>
+      <input id="objVisible"
+        type="checkbox"
+        ${o.visible?"checked":""}>
+      보이기
+    </label>
+
+    <br>
+
+    <button class="smallbtn" id="renameObj">
+      이름 적용
+    </button>
+  `;
+
+  $("#renameObj").onclick=()=>{
+    o.name=$("#objName").value||"오브젝트";
+    updateObject();
+  };
+
+  ["objX","objY","objSize","objDir"].forEach(id=>{
+    $("#"+id).oninput=()=>{
+      o.x=Number($("#objX").value);
+      o.y=Number($("#objY").value);
+      o.size=Number($("#objSize").value);
+      o.direction=Number($("#objDir").value);
+      renderStage();
+    };
+  });
+
+  $("#objVisible").onchange=()=>{
+    o.visible=$("#objVisible").checked;
+    renderStage();
+  };
+}
+
+function updateObject(){
+  renderObjects();
+  renderProps();
+  renderStage();
+}
+
+/* ---------------------------------------------------------
+   STAGE
+   --------------------------------------------------------- */
+
+function renderStage(){
+
+  const stage=$("#stage");
+
+  if(!stage)return;
+
+  stage.innerHTML="";
+
+  for(const o of state.objects){
+
+    if(!o.visible)continue;
+
+    const el=document.createElement("div");
+
+    el.className=
+      "object"+
+      (o.id===state.selectedObject
+        ?" selected":"");
+
+    el.dataset.id=o.id;
+
+    el.style.left=(o.x-25)+"px";
+    el.style.top=(o.y-25)+"px";
+
+    el.style.width=(50*o.size/100)+"px";
+    el.style.height=(50*o.size/100)+"px";
+
+    el.style.transform=
+      `rotate(${o.direction-90}deg)`;
+
+    if(o.costume){
+      el.style.backgroundImage=
+        `url("${o.costume}")`;
+
+      el.style.backgroundSize="cover";
+      el.textContent="";
+    }else{
+      el.textContent="🎮";
+    }
+
+    el.onclick=e=>{
+      e.stopPropagation();
+
+      state.selectedObject=o.id;
+
+      renderObjects();
+      renderProps();
+      renderStage();
+    };
+
+    stage.appendChild(el);
+  }
+}
+
+/* ---------------------------------------------------------
+   SOUND
+   --------------------------------------------------------- */
+
+function renderSounds(){
+
+  const box=$("#sounds");
+
+  if(!state.sounds.length){
+    box.innerHTML=
+      `<p style="color:#999">소리가 없습니다.</p>`;
+    return;
+  }
+
+  box.innerHTML=state.sounds.map((s,i)=>`
+    <div class="soundrow">
+
+      🔊
+
+      <span class="objname">
+        ${esc(s.name)}
+      </span>
+
+      <button class="smallbtn"
+        data-play="${i}">
+        ▶
+      </button>
+
+      <button class="smallbtn"
+        data-stop="${i}">
+        ■
+      </button>
+
+      <button class="smallbtn"
+        data-del-sound="${i}">
+        ×
+      </button>
+
+    </div>
+  `).join("");
+
+  box.querySelectorAll("[data-play]").forEach(btn=>{
+    btn.onclick=()=>{
+      const s=state.sounds[Number(btn.dataset.play)];
+
+      if(s.audio){
+        s.audio.currentTime=0;
+        s.audio.play().catch(()=>{});
+      }
+    };
+  });
+
+  box.querySelectorAll("[data-stop]").forEach(btn=>{
+    btn.onclick=()=>{
+      const s=state.sounds[Number(btn.dataset.stop)];
+
+      if(s.audio){
+        s.audio.pause();
+        s.audio.currentTime=0;
+      }
+    };
+  });
+
+  box.querySelectorAll("[data-del-sound]").forEach(btn=>{
+    btn.onclick=()=>{
+      const i=Number(btn.dataset.delSound);
+
+      const s=state.sounds[i];
+
+      if(s.audio){
+        s.audio.pause();
+      }
+
+      if(s.url){
+        URL.revokeObjectURL(s.url);
+      }
+
+      state.sounds.splice(i,1);
+      renderSounds();
+    };
+  });
+}
+
+function uploadSound(file){
+
+  if(!file)return;
+
+  const allowed=[
+    "audio/mpeg",
+    "audio/wav",
+    "audio/ogg",
+    "audio/mp4",
+    "audio/webm"
+  ];
+
+  if(
+    !allowed.includes(file.type) &&
+    !/\.(mp3|wav|ogg|m4a|webm)$/i.test(file.name)
+  ){
+    alert("MP3, WAV, OGG 등의 오디오 파일만 사용할 수 있습니다.");
+    return;
+  }
+
+  const url=URL.createObjectURL(file);
+
+  const audio=new Audio(url);
+
+  state.sounds.push({
+    id:crypto.randomUUID(),
+    name:file.name.replace(/\.[^.]+$/,""),
+    type:file.type,
+    size:file.size,
+    url,
+    audio,
+    blob:file
+  });
+
+  renderSounds();
+}
+
+async function recordSound(){
+
+  if(state.audio.recording){
+    state.audio.recorder.stop();
+    return;
+  }
+
+  if(!navigator.mediaDevices?.getUserMedia){
+    alert("이 브라우저에서는 마이크 녹음을 사용할 수 없습니다.");
+    return;
+  }
+
+  try{
+
+    const stream=
+      await navigator.mediaDevices.getUserMedia({
+        audio:true
+      });
+
+    const recorder=
+      new MediaRecorder(stream);
+
+    state.audio.recorder=recorder;
+    state.audio.chunks=[];
+    state.audio.recording=true;
+
+    $("#recordSound").textContent="⏹ 녹음 중지";
+
+    recorder.ondataavailable=e=>{
+      if(e.data.size){
+        state.audio.chunks.push(e.data);
+      }
+    };
+
+    recorder.onstop=()=>{
+
+      const blob=new Blob(
+        state.audio.chunks,
+        {
+          type:recorder.mimeType ||
+            "audio/webm"
+        }
+      );
+
+      const url=URL.createObjectURL(blob);
+      const audio=new Audio(url);
+
+      state.sounds.push({
+        id:crypto.randomUUID(),
+        name:"녹음 "+new Date().toLocaleTimeString(),
+        type:blob.type,
+        size:blob.size,
+        url,
+        audio,
+        blob
+      });
+
+      state.audio.recording=false;
+
+      stream.getTracks().forEach(
+        t=>t.stop()
+      );
+
+      $("#recordSound").textContent="🎙️ 녹음";
+
+      renderSounds();
+    };
+
+    recorder.start();
+
+  }catch(e){
+    alert("마이크 사용 권한이 필요합니다.");
+  }
+}
+
+/* ---------------------------------------------------------
+   PAINT
+   --------------------------------------------------------- */
+
+function initPaint(){
+
+  const canvas=$("#paintCanvas");
+
+  if(!canvas)return;
+
+  state.paint.canvas=canvas;
+  state.paint.ctx=canvas.getContext("2d",{
+    willReadFrequently:true
+  });
+
+  state.paint.ctx.fillStyle="white";
+  state.paint.ctx.fillRect(
+    0,0,canvas.width,canvas.height
+  );
+
+  state.paint.layers[0].canvas=canvas;
+
+  bindPaint();
+
+  renderLayers();
+}
+
+function savePaintHistory(){
+
+  const c=state.paint.canvas;
+
+  state.paint.history.push(
+    c.toDataURL()
+  );
+
+  if(state.paint.history.length>30){
+    state.paint.history.shift();
+  }
+
+  state.paint.future=[];
+}
+
+function restorePaint(url){
 
   const img=new Image();
 
   img.onload=()=>{
-   const g=state.paint.layers[i].canvas.getContext("2d");
-   g.clearRect(0,0,800,600);
-   g.drawImage(img,0,0);
-   renderPaint();
+    const ctx=state.paint.ctx;
+
+    ctx.clearRect(
+      0,0,
+      state.paint.canvas.width,
+      state.paint.canvas.height
+    );
+
+    ctx.drawImage(img,0,0);
   };
 
-  img.src=src;
- });
+  img.src=url;
 }
 
-function currentPaintCanvas(){
- return state.paint.layers[state.paint.activeLayer].canvas;
+function bindPaint(){
+
+  const c=state.paint.canvas;
+
+  const pos=e=>{
+    const r=c.getBoundingClientRect();
+
+    return {
+      x:(e.clientX-r.left)*
+        c.width/r.width,
+
+      y:(e.clientY-r.top)*
+        c.height/r.height
+    };
+  };
+
+  c.onpointerdown=e=>{
+
+    const p=pos(e);
+
+    state.paint.drawing=true;
+
+    state.paint.lastX=p.x;
+    state.paint.lastY=p.y;
+
+    state.paint.startX=p.x;
+    state.paint.startY=p.y;
+
+    savePaintHistory();
+
+    if(state.paint.tool==="fill"){
+      floodFill(
+        Math.floor(p.x),
+        Math.floor(p.y)
+      );
+
+      state.paint.drawing=false;
+      return;
+    }
+
+    if(state.paint.tool==="picker"){
+      const data=state.paint.ctx.getImageData(
+        Math.floor(p.x),
+        Math.floor(p.y),
+        1,1
+      ).data;
+
+      const hex="#"+
+        [data[0],data[1],data[2]]
+          .map(x=>x.toString(16).padStart(2,"0"))
+          .join("");
+
+      state.paint.color=hex;
+      $("#paintColor").value=hex;
+
+      state.paint.drawing=false;
+      return;
+    }
+
+    c.setPointerCapture(e.pointerId);
+  };
+
+  c.onpointermove=e=>{
+
+    if(!state.paint.drawing)return;
+
+    const p=pos(e);
+
+    const ctx=state.paint.ctx;
+
+    if(
+      state.paint.tool==="pen" ||
+      state.paint.tool==="eraser"
+    ){
+
+      ctx.save();
+
+      ctx.globalAlpha=
+        state.paint.alpha/100;
+
+      ctx.lineCap="round";
+      ctx.lineJoin="round";
+      ctx.lineWidth=state.paint.width;
+
+      ctx.strokeStyle=
+        state.paint.tool==="eraser"
+          ? "rgba(0,0,0,1)"
+          : state.paint.color;
+
+      if(state.paint.tool==="eraser"){
+        ctx.globalCompositeOperation=
+          "destination-out";
+      }else{
+        ctx.globalCompositeOperation=
+          "source-over";
+      }
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        state.paint.lastX,
+        state.paint.lastY
+      );
+
+      ctx.lineTo(p.x,p.y);
+
+      ctx.stroke();
+      ctx.restore();
+
+      state.paint.lastX=p.x;
+      state.paint.lastY=p.y;
+    }
+  };
+
+  c.onpointerup=e=>{
+
+    if(!state.paint.drawing)return;
+
+    const p=pos(e);
+    const ctx=state.paint.ctx;
+
+    if(state.paint.tool==="line"){
+      drawLine(
+        state.paint.startX,
+        state.paint.startY,
+        p.x,p.y
+      );
+    }
+
+    if(state.paint.tool==="rect"){
+      ctx.save();
+
+      ctx.globalAlpha=
+        state.paint.alpha/100;
+
+      ctx.strokeStyle=state.paint.color;
+      ctx.lineWidth=state.paint.width;
+
+      ctx.strokeRect(
+        state.paint.startX,
+        state.paint.startY,
+        p.x-state.paint.startX,
+        p.y-state.paint.startY
+      );
+
+      ctx.restore();
+    }
+
+    if(state.paint.tool==="circle"){
+
+      const dx=
+        p.x-state.paint.startX;
+
+      const dy=
+        p.y-state.paint.startY;
+
+      const radius=
+        Math.sqrt(dx*dx+dy*dy);
+
+      ctx.save();
+
+      ctx.globalAlpha=
+        state.paint.alpha/100;
+
+      ctx.strokeStyle=state.paint.color;
+      ctx.lineWidth=state.paint.width;
+
+      ctx.beginPath();
+
+      ctx.arc(
+        state.paint.startX,
+        state.paint.startY,
+        radius,
+        0,
+        Math.PI*2
+      );
+
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    state.paint.drawing=false;
+  };
+
+  c.onpointercancel=()=>{
+    state.paint.drawing=false;
+  };
+
+  document.querySelectorAll("[data-tool]").forEach(btn=>{
+    btn.onclick=()=>{
+      state.paint.tool=btn.dataset.tool;
+    };
+  });
+
+  $("#paintColor").oninput=e=>{
+    state.paint.color=e.target.value;
+  };
+
+  $("#paintWidth").oninput=e=>{
+    state.paint.width=Number(e.target.value);
+  };
+
+  $("#paintAlpha").oninput=e=>{
+    state.paint.alpha=Number(e.target.value);
+  };
+
+  $("#paintUndo").onclick=paintUndo;
+  $("#paintRedo").onclick=paintRedo;
+
+  $("#paintClear").onclick=()=>{
+    savePaintHistory();
+
+    state.paint.ctx.clearRect(
+      0,0,c.width,c.height
+    );
+  };
+
+  $("#paintExport").onclick=exportPaint;
+
+  $("#paintImageUpload").onclick=()=>{
+    $("#imageFile").click();
+  };
+
+  $("#imageFile").onchange=e=>{
+    addImageToPaint(e.target.files[0]);
+    e.target.value="";
+  };
+
+  $("#bitmapMode").onclick=()=>{
+    state.paint.mode="bitmap";
+  };
+
+  $("#vectorMode").onclick=()=>{
+    state.paint.mode="vector";
+  };
+
+  $("#pixelMode").onclick=()=>{
+    state.paint.mode="pixelmap";
+  };
+
+  $("#addLayer").onclick=addLayer;
+  $("#removeLayer").onclick=removeLayer;
 }
 
-function paintDrawLine(x1,y1,x2,y2){
- const c=currentPaintCanvas();
- if(!c)return;
+function drawLine(x1,y1,x2,y2){
 
- const g=c.getContext("2d");
+  const ctx=state.paint.ctx;
 
- g.globalAlpha=state.paint.alpha/100;
- g.lineWidth=state.paint.width;
- g.lineCap="round";
- g.lineJoin="round";
+  ctx.save();
 
- if(state.paint.tool==="eraser"){
-  g.globalCompositeOperation="destination-out";
- }else{
-  g.globalCompositeOperation="source-over";
-  g.strokeStyle=state.paint.color;
- }
+  ctx.globalAlpha=
+    state.paint.alpha/100;
 
- g.beginPath();
- g.moveTo(x1,y1);
- g.lineTo(x2,y2);
- g.stroke();
+  ctx.strokeStyle=state.paint.color;
+  ctx.lineWidth=state.paint.width;
+  ctx.lineCap="round";
 
- g.globalCompositeOperation="source-over";
- g.globalAlpha=1;
+  ctx.beginPath();
+  ctx.moveTo(x1,y1);
+  ctx.lineTo(x2,y2);
+  ctx.stroke();
 
- renderPaint();
+  ctx.restore();
 }
 
-function paintPoint(x,y){
- paintDrawLine(x,y,x+.01,y+.01);
+function floodFill(x,y){
+
+  const c=state.paint.canvas;
+  const ctx=state.paint.ctx;
+
+  const img=ctx.getImageData(
+    0,0,c.width,c.height
+  );
+
+  const data=img.data;
+
+  const index=(y*c.width+x)*4;
+
+  const target=[
+    data[index],
+    data[index+1],
+    data[index+2],
+    data[index+3]
+  ];
+
+  const color=hexToRgb(state.paint.color);
+
+  const replacement=[
+    color.r,
+    color.g,
+    color.b,
+    Math.round(255*state.paint.alpha/100)
+  ];
+
+  if(
+    target.every((v,i)=>v===replacement[i])
+  )return;
+
+  const stack=[[x,y]];
+
+  while(stack.length){
+
+    const [cx,cy]=stack.pop();
+
+    if(
+      cx<0 ||
+      cy<0 ||
+      cx>=c.width ||
+      cy>=c.height
+    )continue;
+
+    const i=(cy*c.width+cx)*4;
+
+    if(
+      data[i]!==target[0] ||
+      data[i+1]!==target[1] ||
+      data[i+2]!==target[2] ||
+      data[i+3]!==target[3]
+    )continue;
+
+    data[i]=replacement[0];
+    data[i+1]=replacement[1];
+    data[i+2]=replacement[2];
+    data[i+3]=replacement[3];
+
+    stack.push([cx+1,cy]);
+    stack.push([cx-1,cy]);
+    stack.push([cx,cy+1]);
+    stack.push([cx,cy-1]);
+  }
+
+  ctx.putImageData(img,0,0);
 }
 
-function renderPaint(){
- const view=document.getElementById("paintCanvas");
- if(!view)return;
+function hexToRgb(hex){
 
- const g=view.getContext("2d");
+  const n=parseInt(
+    hex.replace("#",""),
+    16
+  );
 
- g.clearRect(0,0,800,600);
- g.fillStyle="#fff";
- g.fillRect(0,0,800,600);
-
- state.paint.layers.forEach(l=>{
-  if(l.visible&&l.canvas)g.drawImage(l.canvas,0,0);
- });
-}
-
-function renderPaintLayers(){
- const e=document.getElementById("paintLayers");
- if(!e)return;
-
- e.innerHTML=state.paint.layers.map((l,i)=>`
-  <div class="layer ${i===state.paint.activeLayer?"active":""}"
-   onclick="CS.selectPaintLayer(${i})">
-   ${l.visible?"👁":"🚫"} ${esc(l.name)}
-  </div>`).join("");
-}
-
-function paintTool(t){
- state.paint.tool=t;
-}
-
-function paintMode(m){
- state.paint.mode=m;
- log("그림판 모드: "+m);
-}
-
-function paintColor(c){
- state.paint.color=c;
-}
-
-function paintWidth(w){
- state.paint.width=Number(w)||1;
-}
-
-function paintAlpha(a){
- state.paint.alpha=Number(a);
+  return {
+    r:(n>>16)&255,
+    g:(n>>8)&255,
+    b:n&255
+  };
 }
 
 function paintUndo(){
- if(!paintHistory.length)return;
- paintFuture.push(paintSnapshot());
- paintRestore(paintHistory.pop());
+
+  const h=state.paint.history;
+
+  if(!h.length)return;
+
+  const current=
+    state.paint.canvas.toDataURL();
+
+  state.paint.future.push(current);
+
+  const previous=h.pop();
+
+  restorePaint(previous);
 }
 
 function paintRedo(){
- if(!paintFuture.length)return;
- paintHistory.push(paintSnapshot());
- paintRestore(paintFuture.pop());
-}
 
-function clearPaint(){
- paintInit();
+  const f=state.paint.future;
 
- state.paint.layers.forEach(l=>{
-  if(l.canvas){
-   const g=l.canvas.getContext("2d");
-   g.clearRect(0,0,800,600);
-  }
- });
+  if(!f.length)return;
 
- renderPaint();
-}
+  const current=
+    state.paint.canvas.toDataURL();
 
-function addPaintLayer(){
- paintInit();
+  state.paint.history.push(current);
 
- const c=document.createElement("canvas");
- c.width=800;
- c.height=600;
+  const next=f.pop();
 
- state.paint.layers.push({
-  name:"레이어 "+(state.paint.layers.length+1),
-  visible:true,
-  canvas:c
- });
-
- state.paint.activeLayer=state.paint.layers.length-1;
-
- renderPaintLayers();
- renderPaint();
-}
-
-function renamePaintLayer(){
- const l=state.paint.layers[state.paint.activeLayer];
- if(!l)return;
-
- const n=prompt("레이어 이름",l.name);
- if(n)l.name=n;
-
- renderPaintLayers();
-}
-
-function removePaintLayer(){
- if(state.paint.layers.length<=1)return;
-
- state.paint.layers.splice(state.paint.activeLayer,1);
-
- state.paint.activeLayer=Math.max(
-  0,
-  state.paint.activeLayer-1
- );
-
- renderPaintLayers();
- renderPaint();
-}
-
-function selectPaintLayer(i){
- if(!state.paint.layers[i])return;
-
- state.paint.activeLayer=i;
-
- renderPaintLayers();
+  restorePaint(next);
 }
 
 function exportPaint(){
- const c=document.getElementById("paintCanvas");
- if(!c)return;
 
- const a=document.createElement("a");
- a.download=(state.project||"codescript")+"-그림.png";
- a.href=c.toDataURL("image/png");
- a.click();
+  state.paint.canvas.toBlob(blob=>{
+    if(!blob)return;
+
+    const url=URL.createObjectURL(blob);
+
+    const a=document.createElement("a");
+
+    a.href=url;
+    a.download=
+      (state.project.name||"codescript")+
+      ".png";
+
+    a.click();
+
+    setTimeout(
+      ()=>URL.revokeObjectURL(url),
+      1000
+    );
+  },"image/png");
 }
 
-function savePaintToProject(){
- state.projectPaint=paintSnapshot();
- log("🎨 그림이 프로젝트에 저장되었습니다.");
+function addImageToPaint(file){
+
+  if(!file)return;
+
+  if(!file.type.startsWith("image/")){
+    alert("이미지 파일만 사용할 수 있습니다.");
+    return;
+  }
+
+  const url=URL.createObjectURL(file);
+
+  const img=new Image();
+
+  img.onload=()=>{
+
+    savePaintHistory();
+
+    const c=state.paint.canvas;
+    const ctx=state.paint.ctx;
+
+    const scale=Math.min(
+      c.width/img.width,
+      c.height/img.height,
+      1
+    );
+
+    const w=img.width*scale;
+    const h=img.height*scale;
+
+    ctx.drawImage(
+      img,
+      (c.width-w)/2,
+      (c.height-h)/2,
+      w,h
+    );
+
+    URL.revokeObjectURL(url);
+  };
+
+  img.src=url;
 }
 
-function closePaint(){
- document.querySelector(".paintModal")?.remove();
+/* ---------------------------------------------------------
+   LAYERS
+   --------------------------------------------------------- */
+
+function addLayer(){
+
+  const canvas=document.createElement("canvas");
+
+  canvas.width=800;
+  canvas.height=500;
+
+  const layer={
+    name:"레이어 "+(state.paint.layers.length+1),
+    visible:true,
+    opacity:1,
+    canvas
+  };
+
+  state.paint.layers.push(layer);
+
+  state.paint.activeLayer=
+    state.paint.layers.length-1;
+
+  renderLayers();
 }
 
-/* =========================================================
-   온라인
-   ========================================================= */
+function removeLayer(){
 
-function connect(){
- if(state.ws)return;
+  if(state.paint.layers.length<=1)return;
 
- const proto=location.protocol==="https:"?"wss":"ws";
+  state.paint.layers.splice(
+    state.paint.activeLayer,
+    1
+  );
 
- try{
-  state.ws=new WebSocket(proto+"://"+location.host+"/ws");
- }catch(e){
-  setConn(false);
-  return;
- }
+  state.paint.activeLayer=
+    Math.max(
+      0,
+      state.paint.activeLayer-1
+    );
 
- state.ws.onopen=()=>{
-  state.connected=true;
-  setConn(true);
- };
-
- state.ws.onclose=()=>{
-  state.connected=false;
-  state.ws=null;
-  setConn(false);
- };
-
- state.ws.onerror=()=>{
-  state.connected=false;
-  setConn(false);
- };
-
- state.ws.onmessage=e=>{
-  try{
-   handle(JSON.parse(e.data));
-  }catch(x){}
- };
+  renderLayers();
 }
 
-function setConn(ok){
- const e=document.getElementById("conn");
- if(!e)return;
+function renderLayers(){
 
- e.className="status "+(ok?"ok":"no");
- e.textContent=ok?"서버 연결됨":"서버 오프라인";
-}
+  const box=$("#layers");
 
-function request(obj){
- if(!state.ws||state.ws.readyState!==1)return;
+  if(!box)return;
 
- state.ws.send(JSON.stringify(obj));
-}
+  box.innerHTML=state.paint.layers.map(
+    (l,i)=>`
+      <button
+        class="smallbtn ${
+          i===state.paint.activeLayer
+            ?"active":""
+        }"
+        data-layer="${i}">
+        ${esc(l.name)}
+      </button>
+    `
+  ).join("");
 
-function broadcast(obj){
- request(obj);
-}
+  box.querySelectorAll("[data-layer]").forEach(btn=>{
+    btn.onclick=()=>{
+      state.paint.activeLayer=
+        Number(btn.dataset.layer);
 
-function handle(m){
- if(m.type==="projects"){
-  renderProjects(m.projects||[]);
-  return;
- }
-
- if(m.type==="room_joined"){
-  state.room=m.room||null;
-  state.users=m.users||0;
-
-  const e=document.getElementById("roomState");
-  if(e)e.textContent=
-   state.room?`방 ${state.room} · ${state.users}명`:"방 없음";
-
-  return;
- }
-
- if(m.type==="room_state"){
-  state.users=m.users||0;
-
-  const e=document.getElementById("roomState");
-  if(e)e.textContent=
-   state.room?`방 ${state.room} · ${state.users}명`:"방 없음";
-
-  return;
- }
-
- if(m.type==="project_change"){
-  const p=m.payload||{};
-
-  state.code=p.code||state.code;
-  state.vars=p.vars||state.vars;
-  state.lists=p.lists||state.lists;
-  state.funcs=p.funcs||state.funcs;
-
-  render();
-  return;
- }
-
- if(m.type==="chat"){
-  log("💬 "+(m.message||""));
- }
-}
-
-function createRoom(){
- if(state.mode!=="online")return;
-
- const name=prompt("방 이름","codescript-room");
- if(!name)return;
-
- state.room=name;
-
- request({
-  type:"create_room",
-  room:name
- });
-
- const e=document.getElementById("roomState");
- if(e)e.textContent="방 생성 요청: "+name;
-}
-
-function joinRoom(){
- if(state.mode!=="online")return;
-
- const name=prompt("참가할 방","codescript-room");
- if(!name)return;
-
- state.room=name;
-
- request({
-  type:"join_room",
-  room:name
- });
-}
-
-function leaveRoom(){
- if(!state.room)return;
-
- request({
-  type:"leave_room",
-  room:state.room
- });
-
- state.room=null;
- state.users=0;
-
- const e=document.getElementById("roomState");
- if(e)e.textContent="방 없음";
-}
-
-function sendChat(text){
- if(!state.room)return;
-
- request({
-  type:"chat",
-  room:state.room,
-  message:text
- });
-}
-
-function renderProjects(list){
- const e=document.getElementById("projects");
- if(!e)return;
-
- if(!list.length){
-  e.innerHTML=`
-   <div class="card">
-    공개된 프로젝트가 아직 없습니다.
-   </div>`;
-  return;
- }
-
- e.innerHTML=list.map(p=>`
-  <div class="card">
-   <h3>${esc(p.name||"이름 없음")}</h3>
-   <p>❤️ ${p.likes||0}</p>
-   <button onclick="CS.remake('${esc(p.id||"")}')">
-    리메이크
-   </button>
-  </div>`).join("");
-}
-
-function remake(id){
- log("리메이크: "+id);
-}
-
-/* =========================================================
-   저장 / 공개
-   ========================================================= */
-
-function save(){
- const data={
-  name:state.project,
-  mode:state.mode,
-  code:state.code,
-  vars:state.vars,
-  lists:state.lists,
-  funcs:state.funcs,
-  actor:state.actor,
-  pen:state.pen,
-  paint:state.projectPaint||null
- };
-
- localStorage.setItem(
-  "codescript-project",
-  JSON.stringify(data)
- );
-
- if(state.mode==="online"){
-  request({
-   type:"save_project",
-   project:data
+      renderLayers();
+    };
   });
- }
-
- log("💾 저장 완료");
 }
 
-function publish(){
- save();
+/* ---------------------------------------------------------
+   PROJECT SAVE
+   --------------------------------------------------------- */
 
- if(state.mode==="online"){
-  request({
-   type:"publish_project",
-   project:{
-    name:state.project,
-    code:state.code,
+function serializeProject(){
+
+  return {
+    version:1,
+
+    name:state.project.name,
+
+    objects:state.objects,
+
+    code:state.code.map(b=>({
+      id:b.id,
+      name:b.name,
+      cat:b.cat,
+      action:b.action,
+      color:b.color
+    })),
+
     vars:state.vars,
     lists:state.lists,
-    funcs:state.funcs
-   }
-  });
- }
+    funcs:state.funcs,
 
- log("🌐 공개 요청 완료");
+    sounds:state.sounds.map(s=>({
+      id:s.id,
+      name:s.name,
+      type:s.type,
+      size:s.size
+    }))
+  };
 }
 
-/* =========================================================
-   전역 API
-   ========================================================= */
+function loadProject(p){
 
-window.CS={
- home,
- explore,
- chooseEditor,
- editor,
+  if(!p)return;
 
- setCat(c){
-  state.category=c;
-  palette();
- },
+  if(Array.isArray(p.objects))
+    state.objects=p.objects;
 
- add,
- del,
- clear,
- undo,
- redo,
+  if(Array.isArray(p.code))
+    state.code=p.code;
 
- run,
- stop,
+  state.vars=p.vars||{};
+  state.lists=p.lists||{};
+  state.funcs=p.funcs||{};
 
- save,
- publish,
+  if(state.objects.length){
+    state.selectedObject=
+      state.objects[0].id;
+  }
+}
 
- newVar,
- delVar,
- setVar,
- addVar,
- getVar,
+/* ---------------------------------------------------------
+   SAVE
+   --------------------------------------------------------- */
 
- newList,
- pushList,
- shiftList,
- popList,
- getList,
+async function saveProject(){
 
- newFunc,
- callFunc,
+  const name=
+    prompt(
+      "프로젝트 이름",
+      state.project.name
+    );
 
- createRoom,
- joinRoom,
- leaveRoom,
+  if(name!==null && name.trim()){
+    state.project.name=name.trim();
+  }
 
- echo(){
-  beep(440);
- },
+  try{
 
- clearPaint,
- openPaint,
- closePaint,
- paintTool,
- paintMode,
- paintColor,
- paintWidth,
- paintAlpha,
- paintUndo,
- paintRedo,
- addPaintLayer,
- renamePaintLayer,
- removePaintLayer,
- selectPaintLayer,
- exportPaint,
- savePaintToProject,
+    const data=await api(
+      "/api/projects",
+      {
+        method:"POST",
+        body:JSON.stringify({
+          id:state.project.id,
+          name:state.project.name,
+          project:serializeProject()
+        })
+      }
+    );
 
- connect
-};
+    state.project.id=data.id;
 
-/* =========================================================
-   키보드
-   ========================================================= */
+    alert("프로젝트가 저장되었습니다.");
 
-window.addEventListener("keydown",e=>{
- state.keyDown=true;
+  }catch(e){
+    alert(e.message);
+  }
+}
 
- if(e.key==="Escape"){
-  state.stop=true;
- }
+/* ---------------------------------------------------------
+   EXECUTION
+   --------------------------------------------------------- */
 
- if(e.key===" "){
-  e.preventDefault();
- }
+async function executeBlock(b){
 
- if(e.ctrlKey&&e.key.toLowerCase()==="z"){
-  e.preventDefault();
-  undo();
- }
+  const a=b.action;
+  const o=selectedObject();
 
- if(e.ctrlKey&&e.key.toLowerCase()==="y"){
-  e.preventDefault();
-  redo();
- }
-});
+  switch(a[0]){
 
-window.addEventListener("keyup",()=>{
- state.keyDown=false;
-});
+    case "start":
+      break;
 
-window.addEventListener("pointerdown",()=>{
- state.mouseDown=true;
-});
+    case "wait":
+      await new Promise(
+        r=>setTimeout(
+          r,
+          Number(a[1])*1000
+        )
+      );
+      break;
 
-window.addEventListener("pointerup",()=>{
- state.mouseDown=false;
-});
+    case "move":
+      o.x += Number(a[1]);
+      break;
 
-/* =========================================================
-   시작
-   ========================================================= */
+    case "movex":
+      o.x += Number(a[1]);
+      break;
 
-home();
+    case "movey":
+      o.y += Number(a[1]);
+      break;
+
+    case "setx":
+      o.x=Number(a[1]);
+      break;
+
+    case "sety":
+      o.y=Number(a[1]);
+      break;
+
+    case "direction":
+      o.direction=Number(a[1]);
+      break;
+
+    case "turn":
+      o.direction+=Number(a[1]);
+      break;
+
+    case "center":
+      o.x=320;
+      o.y=200;
+      break;
+
+    case "size":
+      o.size=Number(a[1]);
+      break;
+
+    case "show":
+      o.visible=true;
+      break;
+
+    case "hide":
+      o.visible=false;
+      break;
+
+    case "say":
+      showBubble(o,a[1]);
+      break;
+
+    case "sayTime":
+      showBubble(o,"안녕");
+      await new Promise(
+        r=>setTimeout(r,Number(a[1])*1000)
+      );
+      clearBubble();
+      break;
+
+    case "think":
+      showBubble(o,"💭 "+a[1]);
+      break;
+
+    case "clearSay":
+    case "clearText":
+      clearBubble();
+      break;
+
+    case "penDown":
+      state.paint.penDown=true;
+      break;
+
+    case "penUp":
+      state.paint.penDown=false;
+      break;
+
+    case "penWidth":
+      state.paint.width=Number(a[1]);
+      break;
+
+    case "clearPaint":
+      if(state.paint.ctx){
+        state.paint.ctx.clearRect(
+          0,0,
+          state.paint.canvas.width,
+          state.paint.canvas.height
+        );
+      }
+      break;
+
+    case "stamp":
+      break;
+
+    case "sound":
+
+      if(state.sounds.length){
+        const s=state.sounds[0];
+
+        s.audio.currentTime=0;
+        s.audio.play().catch(()=>{});
+      }
+
+      break;
+
+    case "stopSound":
+
+      for(const s of state.sounds){
+        s.audio.pause();
+        s.audio.currentTime=0;
+      }
+
+      break;
+
+    case "newVar":
+
+      state.vars[a[1]]=0;
+      break;
+
+    case "setVar":
+
+      state.vars[a[1]]=Number(a[2])||0;
+      break;
+
+    case "changeVar":
+
+      state.vars[a[1]]=
+        (Number(state.vars[a[1]])||0)+
+        Number(a[2]||0);
+
+      break;
+
+    case "newList":
+
+      state.lists[a[1]]=[];
+      break;
+
+    case "pushList":
+
+      if(!state.lists[a[1]])
+        state.lists[a[1]]=[];
+
+      state.lists[a[1]].push(a[2]);
+      break;
+
+    case "clearList":
+
+      state.lists[a[1]]=[];
+      break;
+
+    case "add":
+      state.lastValue=
+        Number(a[1])+Number(a[2]);
+      break;
+
+    case "sub":
+      state.lastValue=
+        Number(a[1])-Number(a[2]);
+      break;
+
+    case "mul":
+      state.lastValue=
+        Number(a[1])*Number(a[2]);
+      break;
+
+    case "div":
+      state.lastValue=
+        Number(a[2])===0
+          ?0
+          :Number(a[1])/Number(a[2]);
+      break;
+
+    case "mod":
+      state.lastValue=
+        Number(a[1])%Number(a[2]);
+      break;
+
+    case "random":
+      state.lastValue=
+        Math.floor(
+          Math.random()*
+          (Number(a[2])-Number(a[1])+1)
+        )+
+        Number(a[1]);
+      break;
+
+    case "round":
+      state.lastValue=
+        Math.round(Number(a[1]));
+      break;
+
+    case "abs":
+      state.lastValue=
+        Math.abs(Number(a[1]));
+      break;
+
+    case "newFunc":
+      state.funcs[a[1]]=[];
+      break;
+
+    case "callFunc":
+      if(state.funcs[a[1]]){
+        for(const fb of state.funcs[a[1]]){
+          await executeBlock(fb);
+        }
+      }
+      break;
+
+    case "roomCreate":
+      connectWS();
+      break;
+
+    case "roomJoin":
+      connectWS();
+      break;
+
+    case "chat":
+      if(state.ws?.readyState===1){
+        state.ws.send(JSON.stringify({
+          type:"chat",
+          text:"안녕하세요",
+          user:state.user?.username
+        }));
+      }
+      break;
+
+    case "username":
+      state.lastText=
+        state.user?.username||"";
+      break;
+  }
+
+  renderStage();
+  renderProps();
+}
+
+async function run(){
+
+  if(state.running)return;
+
+  state.running=true;
+  state.stop=false;
+
+  try{
+
+    for(const b of state.code){
+
+      if(state.stop)break;
+
+      await executeBlock(b);
+    }
+
+  }finally{
+    state.running=false;
+  }
+}
+
+function showBubble(o,text){
+
+  let bubble=document.querySelector(".bubble");
+
+  if(!bubble){
+    bubble=document.createElement("div");
+    bubble.className="bubble";
+    bubble.style.position="absolute";
+    bubble.style.background="white";
+    bubble.style.border="2px solid #222";
+    bubble.style.borderRadius="10px";
+    bubble.style.padding="8px";
+    bubble.style.zIndex="20";
+    $("#stage").appendChild(bubble);
+  }
+
+  bubble.textContent=text;
+  bubble.style.left=(o.x+30)+"px";
+  bubble.style.top=(o.y-40)+"px";
+}
+
+function clearBubble(){
+  document.querySelector(".bubble")?.remove();
+}
+
+/* ---------------------------------------------------------
+   WEBSOCKET
+   --------------------------------------------------------- */
+
+function connectWS(){
+
+  if(state.ws?.readyState===1)return;
+
+  try{
+
+    const proto=
+      location.protocol==="https:"
+        ?"wss:"
+        :"ws:";
+
+    state.ws=new WebSocket(
+      proto+
+      "//"+
+      location.host+
+      "/ws"
+    );
+
+    state.ws.onopen=()=>{
+      state.ws.send(JSON.stringify({
+        type:"join_room",
+        room:state.room||"global",
+        user:state.user?.username
+      }));
+    };
+
+    state.ws.onmessage=e=>{
+      try{
+        const msg=JSON.parse(e.data);
+
+        if(msg.type==="chat"){
+          console.log(
+            `[${msg.user}]`,
+            msg.text
+          );
+        }
+      }catch{}
+    };
+
+    state.ws.onclose=()=>{
+      state.ws=null;
+    };
+
+  }catch{}
+}
+
+/* ---------------------------------------------------------
+   BIND EDITOR
+   --------------------------------------------------------- */
+
+function bindEditor(){
+
+  $(".cat").onclick=function(){
+    state.category=this.dataset.cat;
+
+    document.querySelectorAll(".cat")
+      .forEach(x=>x.classList.remove("active"));
+
+    this.classList.add("active");
+
+    renderBlocks();
+  };
+
+  $("#goHome").onclick=home;
+
+  $("#run").onclick=run;
+
+  $("#stop").onclick=()=>{
+    state.stop=true;
+  };
+
+  $("#save").onclick=saveProject;
+
+  $("#addObject").onclick=addObject;
+
+  $("#uploadSound").onclick=()=>{
+    $("#soundFile").click();
+  };
+
+  $("#soundFile").onchange=e=>{
+    uploadSound(e.target.files[0]);
+    e.target.value="";
+  };
+
+  $("#recordSound").onclick=recordSound;
+
+  $("#paintOpen").onclick=()=>{
+    $("#paintModal").classList.add("show");
+  };
+
+  $("#closePaint").onclick=()=>{
+    $("#paintModal").classList.remove("show");
+  };
+}
+
+/* ---------------------------------------------------------
+   STARTUP
+   --------------------------------------------------------- */
+
+async function boot(){
+
+  try{
+
+    const data=await api("/api/me");
+
+    if(data.loggedIn){
+      state.user=data.user;
+      home();
+    }else{
+      loginPage(false);
+    }
+
+  }catch{
+    loginPage(false);
+  }
+}
+
+boot();
 
 })();
