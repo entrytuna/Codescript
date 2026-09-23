@@ -1,4 +1,5 @@
 const MAX_CLIENTS = 20;
+CodescriptServer
 
 /*
  * Codescript Durable Object
