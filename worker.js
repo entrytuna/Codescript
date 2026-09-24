@@ -189,7 +189,7 @@ const HTML = `<!DOCTYPE html>
 
 <body>
 
-<script src="/maincode.js"></script>
+<script src="/main.js"></script>
 
 </body>
 
@@ -237,20 +237,20 @@ export default {
        ----------------------------------------- */
 
     if (
-      url.pathname === "/maincode.js"
+      url.pathname === "/main.js"
     ) {
 
       try {
 
         const response =
           await fetch(
-            "https://raw.githubusercontent.com/entrytuna/Codescript/main/maincode.js"
+            "https://raw.githubusercontent.com/entrytuna/Codescript/main/main.js"
           );
 
         if (!response.ok) {
 
           return new Response(
-            "GitHub에서 maincode.js를 불러오지 못했습니다.",
+            "GitHub에서 main.js를 불러오지 못했습니다.",
             {
               status: 502
             }
@@ -273,7 +273,7 @@ export default {
       } catch (error) {
 
         return new Response(
-          "maincode.js 연결 오류",
+          "main.js 연결 오류",
           {
             status: 502
           }
