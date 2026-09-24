@@ -237,20 +237,20 @@ export default {
        ----------------------------------------- */
 
     if (
-      url.pathname === "/main.js"
+      url.pathname === "/maincode.js"
     ) {
 
       try {
 
         const response =
           await fetch(
-            "https://raw.githubusercontent.com/entrytuna/Codescript/main/main.js"
+            "https://raw.githubusercontent.com/entrytuna/Codescript/main/maincode.js"
           );
 
         if (!response.ok) {
 
           return new Response(
-            "GitHub에서 main.js를 불러오지 못했습니다.",
+            "GitHub에서 maincode.js를 불러오지 못했습니다.",
             {
               status: 502
             }
@@ -273,7 +273,7 @@ export default {
       } catch (error) {
 
         return new Response(
-          "main.js 연결 오류",
+          "maincode.js 연결 오류",
           {
             status: 502
           }
