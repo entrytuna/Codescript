@@ -189,7 +189,7 @@ const HTML = `<!DOCTYPE html>
 
 <body>
 
-<script src="/main.js"></script>
+<script src="/maincode.js"></script>
 
 </body>
 
