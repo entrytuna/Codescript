@@ -399,6 +399,91 @@ function notify(text) {
    블록 시스템
    ========================================================= */
 
+/* =========================================================
+   CODESCRIPT 블록 카테고리 색상
+   ========================================================= */
+
+const BLOCK_CATEGORY_COLORS = {
+
+  /* 시작 */
+  start: "#EC6F9F",
+
+  /* 흐름 */
+  flow: "#7C4DBA",
+
+  /* 움직임 */
+  motion: "#4CAF70",
+
+  /* 생김새 */
+  looks: "#4B8FD8",
+
+  /* 붓 */
+  brush: "#8B5A3C",
+
+  /* 글상자 */
+  text: "#E58A32",
+
+  /* 소리 */
+  sound: "#D94B4B",
+
+  /* 온라인 - 살짝 푸른빛 회색 */
+  online: "#687789",
+
+  /* 판단 */
+  judge: "#62C8E8",
+
+  /* 계산 */
+  calc: "#E6C84F",
+
+  /* 자료 */
+  data: "#48A85A",
+
+  /* 특수 블록 - 완전 검정이 아닌 진한 회색 */
+  special: "#222222",
+
+  /* 플레이어 블록 */
+  player: "#243B73",
+
+  /* 함수 - 기본값
+     실제 함수는 개별 컬러 피커 색상 사용 */
+  function: "#7C3AED"
+
+};
+
+
+/* =========================================================
+   카테고리 색상 가져오기
+   ========================================================= */
+
+function getBlockCategoryColor(category) {
+
+  return (
+    BLOCK_CATEGORY_COLORS[category] ||
+    "#777777"
+  );
+
+}
+
+
+/* =========================================================
+   함수 블록 색상 가져오기
+   ========================================================= */
+
+function getFunctionBlockColor(functionId) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === functionId
+    );
+
+  if (!fn)
+    return BLOCK_CATEGORY_COLORS.function;
+
+  return fn.color ||
+    BLOCK_CATEGORY_COLORS.function;
+
+}
+   
 const BLOCKS = [];
 
 function defineBlock(
@@ -823,7 +908,257 @@ defineBlock(
   [inputSlot(true)],
   { reporter:true, boolean:true }
 );
+/* =========================================================
+   판단
+   ========================================================= */
 
+/* 닿았는가? */
+
+defineBlock(
+  "judge",
+  "닿았는가?",
+  "touching",
+  [inputText("마우스 포인터")],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "위쪽 벽에 닿았는가?",
+  "touchingTop",
+  [],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "아래쪽 벽에 닿았는가?",
+  "touchingBottom",
+  [],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "왼쪽 벽에 닿았는가?",
+  "touchingLeft",
+  [],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "오른쪽 벽에 닿았는가?",
+  "touchingRight",
+  [],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "자신의 다른 복제본에 닿았는가?",
+  "touchingOtherClone",
+  [],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "오브젝트 [오브젝트]에 닿았는가?",
+  "touchingObject",
+  [inputText("오브젝트")],
+  { reporter:true, boolean:true }
+);
+
+
+/* 비교 */
+
+defineBlock(
+  "judge",
+  "10 = 10",
+  "equals",
+  [
+    inputSlot(10),
+    inputSlot(10)
+  ],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "10 ≠ 5",
+  "notEquals",
+  [
+    inputSlot(10),
+    inputSlot(5)
+  ],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "10 > 5",
+  "greater",
+  [
+    inputSlot(10),
+    inputSlot(5)
+  ],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "10 < 20",
+  "less",
+  [
+    inputSlot(10),
+    inputSlot(20)
+  ],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "10 ≥ 5",
+  "greaterOrEqual",
+  [
+    inputSlot(10),
+    inputSlot(5)
+  ],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "10 ≤ 20",
+  "lessOrEqual",
+  [
+    inputSlot(10),
+    inputSlot(20)
+  ],
+  { reporter:true, boolean:true }
+);
+
+
+/* 논리 */
+
+defineBlock(
+  "judge",
+  "아니다",
+  "not",
+  [inputSlot(true)],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "<> 또는 <>",
+  "or",
+  [
+    inputSlot(true),
+    inputSlot(true)
+  ],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "<> 그리고 <>",
+  "and",
+  [
+    inputSlot(true),
+    inputSlot(true)
+  ],
+  { reporter:true, boolean:true }
+);
+
+
+/* 입력 / 클릭 */
+
+defineBlock(
+  "judge",
+  "마우스를 클릭했는가?",
+  "mouseClicked",
+  [],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "오브젝트를 클릭했는가?",
+  "objectClicked",
+  [],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "화면을 터치할 수 있는가?",
+  "canTouchScreen",
+  [],
+  { reporter:true, boolean:true }
+);
+
+
+/* 값의 종류 */
+
+defineBlock(
+  "judge",
+  "(텍스트)가 숫자인가?",
+  "isNumber",
+  [inputText("123")],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "(텍스트)가 영어인가?",
+  "isEnglish",
+  [inputText("ABC")],
+  { reporter:true, boolean:true }
+);
+
+defineBlock(
+  "judge",
+  "(텍스트)가 한글인가?",
+  "isKorean",
+  [inputText("가나다")],
+  { reporter:true, boolean:true }
+);
+
+
+/* 실행 주체 */
+
+defineBlock(
+  "judge",
+  "[대상]에서 실행하는가?",
+  "runningOn",
+  [inputText("본인")],
+  { reporter:true, boolean:true }
+);
+
+
+/* 부정 */
+
+defineBlock(
+  "judge",
+  "[대상]이 아니다",
+  "isNot",
+  [inputText("오브젝트")],
+  { reporter:true, boolean:true }
+);
+
+
+/* 부스트 모드 */
+
+defineBlock(
+  "judge",
+  "부스트 모드인가?",
+  "boostMode",
+  [],
+  { reporter:true, boolean:true }
+);
+   
 /* =========================================================
    계산
    ========================================================= */
@@ -913,14 +1248,419 @@ defineBlock(
   { reporter:true }
 );
 
+   /* =========================================================
+   계산 확장
+   ========================================================= */
+
+/* 고급 수학 */
+
+defineBlock(
+  "calc",
+  "제곱",
+  "power",
+  [inputSlot(10), inputSlot(2)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "제곱근",
+  "sqrt",
+  [inputSlot(100)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "절댓값",
+  "abs",
+  [inputSlot(-10)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "반올림",
+  "round",
+  [inputSlot(10.5)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "올림",
+  "ceil",
+  [inputSlot(10.1)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "내림",
+  "floor",
+  [inputSlot(10.9)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "사인",
+  "sin",
+  [inputSlot(90)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "코사인",
+  "cos",
+  [inputSlot(90)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "탄젠트",
+  "tan",
+  [inputSlot(45)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "아크사인",
+  "asin",
+  [inputSlot(1)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "아크코사인",
+  "acos",
+  [inputSlot(1)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "아크탄젠트",
+  "atan",
+  [inputSlot(1)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "로그",
+  "log",
+  [inputSlot(10)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "자연로그",
+  "ln",
+  [inputSlot(10)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "파이",
+  "pi",
+  [],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "자연상수 e",
+  "e",
+  [],
+  { reporter:true }
+);
+
+
+/* 무작위 */
+
+defineBlock(
+  "calc",
+  "10에서 20 사이의 무작위 수",
+  "randomBetween",
+  [
+    inputNumber(10),
+    inputNumber(20)
+  ],
+  { reporter:true }
+);
+
+
+/* 좌표 */
+
+defineBlock(
+  "calc",
+  "마우스 X좌표",
+  "mouseX",
+  [],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "마우스 Y좌표",
+  "mouseY",
+  [],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "마우스까지의 거리",
+  "distanceToMouse",
+  [],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "벽까지의 거리",
+  "distanceToEdge",
+  [],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "[오브젝트]까지의 거리",
+  "distanceToObject",
+  [inputText("오브젝트")],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "자신의 다른 복제본까지의 거리",
+  "distanceToClone",
+  [],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "x: 0 y: 0까지의 거리",
+  "distanceToXY",
+  [
+    inputNumber(0),
+    inputNumber(0)
+  ],
+  { reporter:true }
+);
+
+
+/* 문자 */
+
+defineBlock(
+  "calc",
+  "닉네임",
+  "nickname",
+  [],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "[텍스트]의 글자 수",
+  "textLength",
+  [inputText("Codescript")],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "[텍스트]의 [텍스트]의 글자 수",
+  "substringLength",
+  [
+    inputText("Codescript"),
+    inputText("Code")
+  ],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "[텍스트]에서 [문자]의 위치",
+  "letterPosition",
+  [
+    inputText("Codescript"),
+    inputText("s")
+  ],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "[텍스트]의 [번째]번째 글자",
+  "letterAt",
+  [
+    inputText("Codescript"),
+    inputNumber(1)
+  ],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "[텍스트]를 대문자로",
+  "toUpperCase",
+  [inputText("Codescript")],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "[텍스트]를 소문자로",
+  "toLowerCase",
+  [inputText("CODESCRIPT")],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "[텍스트]에서 [텍스트]를 찾기",
+  "findText",
+  [
+    inputText("Codescript"),
+    inputText("script")
+  ],
+  { reporter:true }
+);
+
+
+/* 값 */
+
+defineBlock(
+  "calc",
+  "<>의 값",
+  "getValue",
+  [inputSlot(0)],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "코드 개수",
+  "codeCount",
+  [],
+  { reporter:true }
+);
+
+
+/* 색상 */
+
+defineBlock(
+  "calc",
+  "HEX → RGB",
+  "hexToRGB",
+  [inputText("#FF0000")],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "RGB → HEX",
+  "rgbToHex",
+  [
+    inputNumber(255),
+    inputNumber(0),
+    inputNumber(0)
+  ],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "색상의 R값",
+  "getRed",
+  [inputText("#FF0000")],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "색상의 G값",
+  "getGreen",
+  [inputText("#00FF00")],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "색상의 B값",
+  "getBlue",
+  [inputText("#0000FF")],
+  { reporter:true }
+);
+
+
+/* 시간 */
+
+defineBlock(
+  "calc",
+  "초시계",
+  "timer",
+  [],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "현재 시간",
+  "currentTime",
+  [],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "현재 분",
+  "currentMinute",
+  [],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "현재 초",
+  "currentSecond",
+  [],
+  { reporter:true }
+);
+
+defineBlock(
+  "calc",
+  "초시계 초기화",
+  "resetTimer"
+);
+
 /* =========================================================
    자료
    ========================================================= */
+
+/* 변수 */
 
 defineBlock(
   "data",
   "변수 만들기",
   "createVariable",
+  [inputText("변수")]
+);
+
+defineBlock(
+  "data",
+  "변수 삭제하기",
+  "deleteVariable",
   [inputText("변수")]
 );
 
@@ -954,8 +1694,26 @@ defineBlock(
 
 defineBlock(
   "data",
+  "변수가 존재하는가?",
+  "variableExists",
+  [inputText("변수")],
+  { reporter:true, boolean:true }
+);
+
+
+/* 리스트 */
+
+defineBlock(
+  "data",
   "리스트 만들기",
   "createList",
+  [inputText("리스트")]
+);
+
+defineBlock(
+  "data",
+  "리스트 삭제하기",
+  "deleteList",
   [inputText("리스트")]
 );
 
@@ -964,6 +1722,17 @@ defineBlock(
   "리스트에 추가하기",
   "listAdd",
   [
+    inputSlot("값"),
+    inputText("리스트")
+  ]
+);
+
+defineBlock(
+  "data",
+  "리스트의 1번째 항목을 값으로 바꾸기",
+  "listReplace",
+  [
+    inputNumber(1),
     inputSlot("값"),
     inputText("리스트")
   ]
@@ -981,6 +1750,46 @@ defineBlock(
 
 defineBlock(
   "data",
+  "리스트의 1번째 항목",
+  "listItem",
+  [
+    inputNumber(1),
+    inputText("리스트")
+  ],
+  { reporter:true }
+);
+
+defineBlock(
+  "data",
+  "리스트의 길이",
+  "listLength",
+  [inputText("리스트")],
+  { reporter:true }
+);
+
+defineBlock(
+  "data",
+  "리스트를 모두 삭제하기",
+  "listClear",
+  [inputText("리스트")]
+);
+
+defineBlock(
+  "data",
+  "리스트에 값이 포함되어 있는가?",
+  "listContains",
+  [
+    inputText("리스트"),
+    inputSlot("값")
+  ],
+  { reporter:true, boolean:true }
+);
+
+
+/* 신호 */
+
+defineBlock(
+  "data",
   "신호 보내기",
   "broadcast",
   [inputText("메시지")]
@@ -993,6 +1802,94 @@ defineBlock(
   [inputText("메시지")]
 );
 
+defineBlock(
+  "data",
+  "신호 삭제하기",
+  "deleteBroadcast",
+  [inputText("메시지")]
+);
+
+
+/* 데이터 표시 */
+
+defineBlock(
+  "data",
+  "변수 보이기",
+  "showVariable",
+  [inputText("변수")]
+);
+
+defineBlock(
+  "data",
+  "변수 숨기기",
+  "hideVariable",
+  [inputText("변수")]
+);
+
+defineBlock(
+  "data",
+  "리스트 보이기",
+  "showList",
+  [inputText("리스트")]
+);
+
+defineBlock(
+  "data",
+  "리스트 숨기기",
+  [inputText("리스트")]
+);
+
+
+/* 데이터 저장 */
+
+defineBlock(
+  "data",
+  "변수 값을 저장하기",
+  "saveVariable",
+  [inputText("변수")]
+);
+
+defineBlock(
+  "data",
+  "저장된 변수 값 불러오기",
+  "loadVariable",
+  [inputText("변수")],
+  { reporter:true }
+);
+
+
+/* =========================================================
+   묻고 대답
+   ========================================================= */
+
+defineBlock(
+  "data",
+  "무엇인가를 묻고 대답 기다리기",
+  "askAndWait",
+  [inputText("무엇인가?")]
+);
+
+defineBlock(
+  "data",
+  "대답",
+  "answer",
+  [],
+  { reporter:true }
+);
+
+defineBlock(
+  "data",
+  "대답을 대답으로 정하기",
+  "setAnswer",
+  [inputText("대답")]
+);
+
+defineBlock(
+  "data",
+  "대답을 지우기",
+  "clearAnswer"
+);
+   
 /* =========================================================
    특수 블록
    ========================================================= */
@@ -1101,6 +1998,7 @@ defineBlock(
 
 /* =========================================================
    함수
+   엔트리 스타일
    기본값은 0개
    ========================================================= */
 
@@ -1121,7 +2019,15 @@ function createFunction(name) {
 
     color: "#7c3aed",
 
-    blocks: []
+    blocks: [],
+
+    parameters: [],
+
+    localVariables: {},
+
+    returnValue: null,
+
+    enabled: true
 
   };
 
@@ -1132,6 +2038,9 @@ function createFunction(name) {
   return fn;
 
 }
+
+
+/* 함수 삭제 */
 
 function deleteFunction(id) {
 
@@ -1144,6 +2053,398 @@ function deleteFunction(id) {
 
 }
 
+
+/* 함수 이름 변경 */
+
+function renameFunction(id, name) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === id
+    );
+
+  if (!fn)
+    return;
+
+  name =
+    String(name || "")
+      .trim();
+
+  if (!name)
+    return;
+
+  fn.name = name;
+
+  changed();
+
+}
+
+
+/* =========================================================
+   함수 색상
+   ========================================================= */
+
+function setFunctionColor(id, color) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === id
+    );
+
+  if (!fn)
+    return;
+
+  color =
+    String(color || "").trim();
+
+  if (!/^#[0-9a-fA-F]{6}$/.test(color))
+    return;
+
+  fn.color = color;
+
+  changed();
+
+}
+
+
+/* 컬러 피커 열기 */
+
+function openFunctionColorPicker(id) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === id
+    );
+
+  if (!fn)
+    return;
+
+  const picker =
+    document.createElement("input");
+
+  picker.type = "color";
+
+  picker.value =
+    /^#[0-9a-fA-F]{6}$/.test(fn.color)
+      ? fn.color
+      : "#7c3aed";
+
+  picker.style.display = "none";
+
+  document.body.appendChild(picker);
+
+  picker.addEventListener(
+    "input",
+    () => {
+
+      setFunctionColor(
+        id,
+        picker.value
+      );
+
+    }
+  );
+
+  picker.addEventListener(
+    "change",
+    () => {
+
+      picker.remove();
+
+    }
+  );
+
+  picker.click();
+
+}
+
+
+/* =========================================================
+   함수 매개변수
+   ========================================================= */
+
+function addFunctionParameter(id, name) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === id
+    );
+
+  if (!fn)
+    return;
+
+  name =
+    String(name || "")
+      .trim();
+
+  if (!name)
+    return;
+
+  fn.parameters.push({
+
+    id: uid("parameter"),
+
+    name
+
+  });
+
+  changed();
+
+}
+
+
+function deleteFunctionParameter(
+  id,
+  parameterId
+) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === id
+    );
+
+  if (!fn)
+    return;
+
+  fn.parameters =
+    fn.parameters.filter(
+      p => p.id !== parameterId
+    );
+
+  changed();
+
+}
+
+
+function renameFunctionParameter(
+  id,
+  parameterId,
+  name
+) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === id
+    );
+
+  if (!fn)
+    return;
+
+  const parameter =
+    fn.parameters.find(
+      p => p.id === parameterId
+    );
+
+  if (!parameter)
+    return;
+
+  name =
+    String(name || "")
+      .trim();
+
+  if (!name)
+    return;
+
+  parameter.name = name;
+
+  changed();
+
+}
+
+
+/* =========================================================
+   지역변수
+   ========================================================= */
+
+function createLocalVariable(
+  functionId,
+  name,
+  value = 0
+) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === functionId
+    );
+
+  if (!fn)
+    return;
+
+  name =
+    String(name || "")
+      .trim();
+
+  if (!name)
+    return;
+
+  fn.localVariables[name] = value;
+
+  changed();
+
+}
+
+
+function deleteLocalVariable(
+  functionId,
+  name
+) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === functionId
+    );
+
+  if (!fn)
+    return;
+
+  delete fn.localVariables[name];
+
+  changed();
+
+}
+
+
+function setLocalVariable(
+  functionId,
+  name,
+  value
+) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === functionId
+    );
+
+  if (!fn)
+    return;
+
+  name =
+    String(name || "")
+      .trim();
+
+  if (!name)
+    return;
+
+  fn.localVariables[name] = value;
+
+  changed();
+
+}
+
+
+function changeLocalVariable(
+  functionId,
+  name,
+  amount
+) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === functionId
+    );
+
+  if (!fn)
+    return;
+
+  name =
+    String(name || "")
+      .trim();
+
+  if (!name)
+    return;
+
+  const current =
+    Number(fn.localVariables[name]) || 0;
+
+  fn.localVariables[name] =
+    current + (Number(amount) || 0);
+
+  changed();
+
+}
+
+
+function getLocalVariable(
+  functionId,
+  name
+) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === functionId
+    );
+
+  if (!fn)
+    return 0;
+
+  return fn.localVariables[name] ?? 0;
+
+}
+
+
+/* =========================================================
+   함수 결과값
+   ========================================================= */
+
+function setFunctionReturnValue(
+  id,
+  value
+) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === id
+    );
+
+  if (!fn)
+    return;
+
+  fn.returnValue = value;
+
+  changed();
+
+}
+
+
+function clearFunctionReturnValue(id) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === id
+    );
+
+  if (!fn)
+    return;
+
+  fn.returnValue = null;
+
+  changed();
+
+}
+
+
+/* =========================================================
+   함수 활성화
+   ========================================================= */
+
+function setFunctionEnabled(
+  id,
+  enabled
+) {
+
+  const fn =
+    state.functions.find(
+      f => f.id === id
+    );
+
+  if (!fn)
+    return;
+
+  fn.enabled = !!enabled;
+
+  changed();
+
+}
 /* =========================================================
    약 500개 블록 구성
    ========================================================= */
