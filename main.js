@@ -1158,6 +1158,16 @@ defineBlock(
   [],
   { reporter:true, boolean:true }
 );
+
+/* 키 입력 */
+
+defineBlock(
+  "judge",
+  "[키]를 눌렀는가?",
+  "keyPressed",
+  [inputText("스페이스")],
+  { reporter:true, boolean:true }
+);
    
 /* =========================================================
    계산
@@ -8030,414 +8040,123 @@ function stopProject() {
 
 }
 
-/* =========================================================
-   코드 실행
-   ========================================================= */
+    /* =====================================================
+       시작
+       ===================================================== */
 
-function executeObjectCode(
-  object
-) {
-
-  if (!object)
-    return;
-
-  const code =
-    object.code || [];
-
-  code.forEach(
-    saved => {
-
-      executeSavedBlock(
-        object,
-        saved
-      );
-
-    }
-  );
-
-}
-
-function executeSavedBlock(
-  object,
-  block
-) {
-
-  if (!Runtime.running)
-    return;
-
-  const inputs =
-    block.inputs || [];
-
-  switch(
-    block.id
-  ) {
-
-    case "motion_move":
-
-      object.x +=
-        Number(
-          inputs[0] || 0
-        );
-
+    case "start_when_green_flag":
+      executeObjectCode(object);
       break;
 
-    case "motion_change_x":
-
-      object.x +=
-        Number(
-          inputs[0] || 0
-        );
-
+    case "start_when_project_start":
+      executeObjectCode(object);
       break;
 
-    case "motion_change_y":
-
-      object.y +=
-        Number(
-          inputs[0] || 0
-        );
-
+    case "start_when_object_click":
+      executeObjectCode(object);
       break;
 
-    case "motion_turn":
-
-      object.rotation +=
-        Number(
-          inputs[0] || 0
-        );
-
-      break;
-
-    case "looks_show":
-
-      object.visible =
-        true;
-
-      break;
-
-    case "looks_hide":
-
-      object.visible =
-        false;
-
-      break;
-
-    case "looks_size":
-
-      object.size =
-        Number(
-          inputs[0] || 100
-        );
-
-      break;
-
-    case "looks_say":
-
-      showSpeech(
-        object,
-        inputs[0] || ""
-      );
-
-      break;
-
-    case "data_set":
-
-      setVariableValue(
-        inputs[0],
-        inputs[1]
-      );
-
-      break;
-
-    case "data_change":
-
-      changeVariableValue(
-        inputs[0],
-        Number(
-          inputs[1] || 0
-        )
-      );
-
-      break;
-
-    case "signal_send":
-
-      broadcastSignal(
-        inputs[0]
-      );
-
-      break;
-
-    case "online_message":
-
-      sendOnlineMessage(
-        inputs[0]
-      );
-
-      break;
-
-    case "player_move":
-
+    case "start_when_key":
       if (
-        object.type ===
-        "player"
+        Runtime.keys &&
+        Runtime.keys[
+          String(inputs[0] ?? "Q").toLowerCase()
+        ]
       ) {
-
-        object.x +=
-          Number(
-            inputs[0] || 0
-          );
-
+        executeObjectCode(object);
       }
-
       break;
 
-  }
+    case "start_when_signal":
+      if (
+        Runtime.lastSignal ===
+        String(inputs[0] ?? "")
+      ) {
+        executeObjectCode(object);
+      }
+      break;
 
-  renderStageOnly();
 
-}
+    /* =====================================================
+       흐름
+       ===================================================== */
 
-/* =========================================================
-   변수 실행
-   ========================================================= */
+    case "flow_wait":
+      // 현재 엔진은 동기 실행 구조라
+      // 실제 지연은 아래 wait 함수로 처리
+      waitSeconds(
+        Number(inputs[0] ?? 1)
+      );
+      break;
 
-function setVariableValue(
-  name,
-  value
-) {
+    case "flow_repeat":
+      for (
+        let i = 0;
+        i < Number(inputs[0] ?? 1);
+        i++
+      ) {
+        if (!Runtime.running)
+          break;
 
-  const variable =
-    state.variables.find(
-      item =>
-        item.name ===
-        name
-    );
-
-  if (!variable)
-    return;
-
-  variable.value =
-    value;
-
-}
-
-function changeVariableValue(
-  name,
-  amount
-) {
-
-  const variable =
-    state.variables.find(
-      item =>
-        item.name ===
-        name
-    );
-
-  if (!variable)
-    return;
-
-  variable.value =
-    Number(
-      variable.value
-    ) +
-    Number(
-      amount
-    );
-
-}
-
-/* =========================================================
-   복제본
-   ========================================================= */
-
-function createClone(
-  object
-) {
-
-  if (!object)
-    return null;
-
-  const clone =
-    structuredClone(
-      object
-    );
-
-  clone.id =
-    uid("clone");
-
-  clone.name =
-    object.name +
-    " 복제본";
-
-  Runtime.clones.push(
-    clone
-  );
-
-  return clone;
-
-}
-
-function deleteClone(
-  cloneId
-) {
-
-  Runtime.clones =
-    Runtime.clones.filter(
-      clone =>
-        clone.id !==
-        cloneId
-    );
-
-}
-
-/* =========================================================
-   신호
-   ========================================================= */
-
-const SignalBus =
-  new EventTarget();
-
-function broadcastSignal(
-  name
-) {
-
-  SignalBus.dispatchEvent(
-    new CustomEvent(
-      "signal",
-      {
-        detail:{
-          name
+        if (typeof inputs[1] === "function") {
+          inputs[1]();
         }
       }
-    )
-  );
+      break;
 
-}
+    case "flow_forever":
+      // 무한 반복은 브라우저 멈춤 방지를 위해
+      // 실제 런타임 루프에서 처리
+      break;
 
-/* =========================================================
-   말하기
-   ========================================================= */
+    case "flow_repeat_until":
+      // 조건 루프는 런타임에서 처리
+      break;
 
-function showSpeech(
-  object,
-  text
-) {
+    case "flow_continue":
+      return "__CONTINUE__";
 
-  const message =
-    document.createElement(
-      "div"
-    );
+    case "flow_break":
+      return "__BREAK__";
 
-  message.className =
-    "cs-speech";
+    case "flow_restart":
+      if (
+        typeof startProject === "function"
+      ) {
+        startProject();
+      }
+      break;
 
-  message.textContent =
-    text;
+    case "flow_stop":
+    case "flow_stop_self":
+    case "flow_stop_this":
+      return "__STOP__";
 
-  message.style.left =
-    `${object.x}px`;
+    case "flow_stop_all":
+      Runtime.running = false;
+      return "__STOP_ALL__";
 
-  message.style.top =
-    `${object.y - 60}px`;
+    case "flow_create_clone":
+      createClone(object);
+      break;
 
-  document.body.appendChild(
-    message
-  );
+    case "flow_delete_clone":
+      if (object.type === "clone") {
+        deleteClone(object.id);
+      }
+      break;
 
-  setTimeout(
-    () => {
+    case "flow_delete_all_clones":
+      Runtime.clones = [];
+      break;
 
-      message.remove();
-
-    },
-    2000
-  );
-
-}
-
-/* =========================================================
-   특수 블록
-   ========================================================= */
-
-const SPECIAL_BLOCKS = [
-
-  {
-    id:"special_chat",
-    name:"채팅 메시지",
-    category:"special"
-  },
-
-  {
-    id:"special_file",
-    name:"파일 올리기",
-    category:"special"
-  },
-
-  {
-    id:"special_weather",
-    name:"날씨",
-    category:"special"
-  },
-
-  {
-    id:"special_translate",
-    name:"언어 번역",
-    category:"special"
-  },
-
-  {
-    id:"special_record",
-    name:"녹음해서 인식",
-    category:"special"
-  },
-
-  {
-    id:"special_ai",
-    name:"AI",
-    category:"special"
-  }
-
-];
-
-/* =========================================================
-   파일 올리기
-   ========================================================= */
-
-function chooseFile(
-  accept="*/*"
-) {
-
-  return new Promise(
-    resolve => {
-
-      const input =
-        document.createElement(
-          "input"
+    case "flow_delete_other_clones":
+      Runtime.clones =
+        Runtime.clones.filter(
+          clone =>
+            clone.id === object.id
         );
-
-      input.type =
-        "file";
-
-      input.accept =
-        accept;
-
-      input.onchange =
-        () => {
-
-          resolve(
-            input.files[0] ||
-            null
-          );
-
-        };
-
-      input.click();
-
-    }
-  );
-
-}
+      break;
 
 /* =========================================================
    소리 올리기
